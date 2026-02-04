@@ -1,0 +1,17 @@
+# Source (dist/ is what gets published)
+src/
+tsconfig.json
+jest.config.cjs
+
+# Tests
+*.test.ts
+coverage/
+
+# Dev files
+.DS_Store
+.gitignore
+AGENTS.md
+TODO.md
+
+# Docs (optional - users can see on GitHub)
+docs/

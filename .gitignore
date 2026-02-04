@@ -1,0 +1,22 @@
+# NPM
+node_modules
+npm-debug.log*
+*.tgz
+
+# Logs
+*.log
+
+# Test
+coverage
+
+# Build
+dist
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Internal docs
+AGENTS.md
+TODO.md
+docs/private

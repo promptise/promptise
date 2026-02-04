@@ -1,0 +1,435 @@
+# ✨ Promptise
+
+[![npm version](https://img.shields.io/npm/v/@promptise/core.svg)](https://www.npmjs.com/package/@promptise/core)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/promptise/promptise/blob/main/LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+
+> **The component-based prompt engineering framework.**
+> Build type-safe, reusable LLM prompts like you build UIs.
+
+Promptise brings **component-based architecture** from UI frameworks (Angular, React, etc.) to prompt engineering. Compose complex prompts from small, reusable building blocks with full TypeScript type safety. Open-source, framework-agnostic, and production-ready.
+
+---
+
+## 🎯 Why Promptise?
+
+### **Component-Based Architecture**
+
+Build prompts like you build UIs—from small, reusable, testable components. Inspired by component-based frameworks (Angular, React, Vue), Promptise brings the same engineering rigor to prompt design.
+
+```typescript
+// Define once, reuse everywhere
+const roleComponent = createPromptComponent({
+  /* ... */
+});
+
+// Compose into different prompts
+const medicalPrompt = createPromptComposition({
+  components: [roleComponent, medicalRulesComp, taskComp],
+});
+
+const legalPrompt = createPromptComposition({
+  components: [roleComponent, legalGuidelinesComp, taskComp],
+});
+```
+
+### **Type-Safe by Design**
+
+Powered by Zod and TypeScript. Catch errors at compile-time, not runtime. Get intelligent IDE autocomplete for your entire prompt structure.
+
+### **Framework Agnostic**
+
+Works with OpenAI, Anthropic, Mastra AI, LangChain, or any LLM provider. Your prompts, your choice.
+
+### **Production Ready**
+
+Built-in content validation, token counting, multi-turn strategies, and compliance checks. Trusted for regulated industries like healthcare and finance.
+
+---
+
+## 📦 Installation
+
+```bash
+npm install @promptise/core
+# or
+pnpm add @promptise/core
+# or
+yarn add @promptise/core
+```
+
+---
+
+## 🚀 Quick Start
+
+```typescript
+import { createPromptComponent, createPromptComposition } from '@promptise/core';
+import { z } from 'zod';
+
+// 1. Define reusable components
+const roleComponent = createPromptComponent({
+  key: 'role',
+  schema: z.object({ role: z.string() }),
+  template: 'You are a {{role}}.',
+});
+
+const taskComponent = createPromptComponent({
+  key: 'task',
+  schema: z.object({ task: z.string() }),
+  template: 'Your task: {{task}}',
+});
+
+// 2. Compose them together
+const myPrompt = createPromptComposition({
+  id: 'assistant-prompt',
+  components: [roleComponent, taskComponent], // Reusable building blocks
+});
+
+// 3. Build with type-safe inputs
+const prompt = myPrompt.build({
+  role: 'helpful assistant',
+  task: 'Analyze this dataset',
+});
+
+console.log(prompt.asString());
+// Output:
+// You are a helpful assistant.
+//
+// Your task: Analyze this dataset
+```
+
+> **How it works:** The composition automatically merges schemas from all components. Each field in your input object is validated against its component's schema and passed to the corresponding template.
+
+```typescript
+// Use with any LLM
+const messages = prompt.asMessages(); // For chat models
+await openai.chat.completions.create({ model: 'gpt-4', messages });
+```
+
+---
+
+## 🧩 Core Primitives
+
+### 1. Components
+
+**The atomic building blocks of your prompts.**
+
+```typescript
+const component = createPromptComponent({
+  key: 'greeting', // Semantic identifier
+  schema: z.object({
+    // Type-safe input validation
+    name: z.string(),
+    time: z.enum(['morning', 'evening']),
+  }),
+  template: ({ input }) => {
+    // String or function template
+    return `Good ${input.time}, ${input.name}!`;
+  },
+  description: 'Personalized greeting', // Optional documentation
+});
+
+// Validate and render
+const result = component.render({ name: 'Alice', time: 'morning' });
+console.log(result.content); // "Good morning, Alice!"
+```
+
+> **Note:** Function templates receive a context object with `input` (your validated data), `context` (optional runtime context), and `optimized` (when optimizer is enabled).
+
+**Features:**
+
+- ✅ String templates with `{{variable}}` interpolation
+- ✅ Function templates for dynamic logic
+- ✅ Static components (no input schema)
+- ✅ Intrinsic content validation (opt-in)
+- ✅ Native cost tracking with token counting
+- ✅ Zod validation with detailed errors
+
+---
+
+### 2. Compositions
+
+**Orchestrate multiple components into complete prompts with automatic cost tracking.**
+
+```typescript
+const composition = createPromptComposition({
+  id: 'medical-analysis',
+  components: [roleComponent, rulesComponent, taskComponent],
+  pattern: RACE_PATTERN, // Optional: enforce structure
+  componentWrapper: 'xml', // Optional: wrap with <tags>
+  messageRoles: {
+    // Optional: multi-message chat
+    role: 'system',
+    task: 'user',
+  },
+  cost: {
+    // Optional: enable cost tracking (GPT-5 pricing)
+    inputTokenPrice: 0.000005, // $5 / 1M input tokens
+    outputTokenPrice: 0.000015, // $15 / 1M output tokens
+    currency: 'USD',
+  },
+});
+
+const prompt = composition.build(data);
+
+console.log(prompt.asString());
+// Output with XML wrapper:
+// <role>
+// You are a helpful assistant.
+// </role>
+//
+// <rules>
+// Follow medical guidelines
+// </rules>
+//
+// <task>
+// Analyze this patient data
+// </task>
+
+// Automatic token counting and cost calculation
+console.log(prompt.metadata.tokenCount); // Total input tokens
+console.log(prompt.metadata.cost.input.cost); // Input cost in USD
+console.log(prompt.metadata.components); // Per-component breakdown
+
+// After LLM response
+prompt.updateCost({ outputTokens: 150 });
+console.log(prompt.metadata.cost.total); // Total cost (input + output)
+
+// messageRoles maps component keys to chat message roles
+const messages = prompt.asMessages();
+// [
+//   { role: 'system', content: 'You are a helpful assistant.' },
+//   { role: 'user', content: 'Analyze this patient data' }
+// ]
+```
+
+**Features:**
+
+- ✅ Schema inference from components
+- ✅ Schema augmentation (extend inferred types)
+- ✅ Context propagation
+- ✅ Multiple output formats (string, messages)
+- ✅ Component wrappers (XML, Markdown, Brackets)
+- ✅ Built-in cost tracking with token counting
+- ✅ Token optimization with TOON (30-60% reduction)
+
+---
+
+### 3. Patterns
+
+**Enforce prompt engineering best practices with validation.**
+
+```typescript
+import { createCompositionPattern, RACE_PATTERN } from '@promptise/core';
+
+// Use prebuilt patterns
+const composition = createPromptComposition({
+  id: 'my-prompt',
+  components: [roleComp, actionComp, contextComp, examplesComp],
+  pattern: RACE_PATTERN, // Enforces: Role → Action → Context → Examples
+});
+
+// Or create custom patterns with validation
+const medicalPattern = createCompositionPattern({
+  id: 'medical-analysis',
+  description: 'HIPAA-compliant clinical analysis',
+  maxTokens: 8192, // GPT-4 8K context window limit
+  components: [
+    {
+      key: 'role',
+      validation: {
+        required: ['clinical', 'synthesizer'], // Must contain keywords
+        maxTokens: 100, // Per-component token limit
+      },
+    },
+    {
+      key: 'rules',
+      validation: {
+        required: ['HIPAA', 'PHI'], // Compliance keywords
+        forbidden: ['diagnose', 'prescribe'], // Liability prevention
+        optional: ['FDA', 'HL7'], // Best practices (warnings)
+      },
+    },
+  ],
+});
+```
+
+**Prebuilt Composition Patterns:**
+
+- `RACE_PATTERN` - Role, Action, Context, Examples
+- `COSTAR_PATTERN` - Context, Objective, Style, Tone, Audience, Response
+- `CHAIN_OF_THOUGHT_PATTERN` - Task, Reasoning, Constraints
+- `FEW_SHOT_PATTERN` - Instruction, Examples, Task
+- `COMPOSITION_REACT_PATTERN` - Thought, Action, Observation (ReAct agent pattern)
+
+**Validation Features:**
+
+- ✅ Component-level validation (intrinsic, always active)
+- ✅ Pattern-level validation (per-component + global)
+- ✅ Required/optional/forbidden keywords
+- ✅ Token limits (per-component and global)
+- ✅ Custom validators with detailed errors
+- ✅ Cascade validation (Component → Pattern, AND logic)
+- ✅ Case-insensitive matching
+
+---
+
+### 4. Strategies
+
+**Multi-turn prompt chaining with state management.**
+
+```typescript
+import { createPromptStrategy } from '@promptise/core';
+
+// Create a strategy for iterative workflows
+const strategy = createPromptStrategy({
+  id: 'draft-critique-refine',
+  description: 'Iterative content refinement',
+  steps: [draftComposition, critiqueComposition, refineComposition],
+});
+
+// Execute sequentially with state tracking
+const draft = strategy.current({ topic: 'AI Ethics' });
+const draftResponse = await llm.invoke(draft.asString());
+
+const critique = strategy.next({ draft: draftResponse });
+const critiqueResponse = await llm.invoke(critique.asString());
+
+const final = strategy.next({
+  draft: draftResponse,
+  critique: critiqueResponse,
+});
+
+// Track progress
+console.log(strategy.progress);
+// { current: 2, total: 3, percentage: 66.66 }
+
+console.log(strategy.getHistory());
+// Full execution trace with timestamps
+```
+
+**Features:**
+
+- ✅ Stateful navigation (prevents step skipping)
+- ✅ Execution history with timestamps
+- ✅ Progress monitoring
+- ✅ Reset and restart capabilities
+- ✅ Perfect for ReAct, Chain-of-Density, Draft-Critique-Refine
+
+---
+
+### 5. Token Optimization
+
+**Reduce LLM costs by 30-60% with native TOON integration.**
+
+```typescript
+const component = createPromptComponent({
+  key: 'users',
+  schema: z.object({
+    users: z.array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        role: z.string(),
+      }),
+    ),
+  }),
+  optimizer: {
+    toon: true, // ✅ Enable TOON optimization
+  },
+  template: ({ optimized }) => `
+Analyze these users:
+${optimized.users}
+  `,
+});
+
+// TOON format is significantly more token-efficient than JSON
+```
+
+**TOON Output:**
+
+```
+users[3]{id,name,role}:
+  1,Alice,admin
+  2,Bob,user
+  3,Charlie,user
+```
+
+**Features:**
+
+- ✅ 30-60% token reduction for arrays of objects
+- ✅ Automatic detection of optimizable data
+- ✅ Partnership with [TOON Format](https://github.com/toon-format/toon)
+- ✅ Native integration with cost tracking
+
+---
+
+## 🔌 Framework Integrations
+
+### Mastra AI
+
+```typescript
+import { Agent } from '@mastra/core/agent';
+import { vertex } from '@ai-sdk/google-vertex';
+
+const agent = new Agent({
+  name: 'medical-assistant',
+  model: () => vertex('gemini-2.0-flash'),
+  instructions: myPrompt.build(data).asString(),
+});
+```
+
+### LangChain
+
+```typescript
+import { ChatOpenAI } from '@langchain/openai';
+
+const llm = new ChatOpenAI();
+const result = await llm.invoke(myPrompt.build(data).asMessages());
+```
+
+### OpenAI
+
+```typescript
+import OpenAI from 'openai';
+
+const openai = new OpenAI();
+const completion = await openai.chat.completions.create({
+  model: 'gpt-4o',
+  messages: myPrompt.build(data).asMessages(),
+});
+```
+
+---
+
+## 🛡️ Type Safety & Validation
+
+All validation powered by Zod with enhanced error messages:
+
+```typescript
+try {
+  const result = component.render({
+    /* invalid data */
+  });
+} catch (error) {
+  console.error(error.message);
+  // [Promptise] Validation failed for component "greeting"
+  //   Issue 1:
+  //     Path: name
+  //     Problem: Required
+  //     Code: invalid_type
+  //     💡 Suggestion: Ensure the value matches the expected type 'string'.
+}
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Whether it's bug reports, new features, or integration guides.
+
+---
+
+## 📄 License
+
+Apache-2.0 © 2026 Promptise
