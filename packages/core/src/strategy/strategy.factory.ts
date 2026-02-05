@@ -209,6 +209,7 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
     }
 
     const currentComposition = steps[currentIndex];
+    if (!currentComposition) return null;
     return currentComposition.build(data, context);
   }
 
@@ -220,6 +221,7 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
 
     // Record current step in history before advancing
     const currentComposition = steps[currentIndex];
+    if (!currentComposition) return null;
     history.push({
       index: currentIndex,
       id: currentComposition.id,
@@ -236,6 +238,7 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
 
     // Build the new current step
     const nextComposition = steps[currentIndex];
+    if (!nextComposition) return null;
     return nextComposition.build(data, context);
   }
 
@@ -254,7 +257,7 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
 
   function getNextStep(): PromptComposition | null {
     const nextIndex = currentIndex + 1;
-    return nextIndex < steps.length ? steps[nextIndex] : null;
+    return nextIndex < steps.length ? (steps[nextIndex] ?? null) : null;
   }
 
   function getHistory(): StrategyHistory[] {
@@ -275,7 +278,11 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
           `> Total steps: ${String(steps.length)}`,
       );
     }
-    return steps[index];
+    const step = steps[index];
+    if (!step) {
+      throw new Error(`[Promptise] Strategy "${id}" step not found at index ${String(index)}`);
+    }
+    return step;
   }
 
   function getStepById(id: string): PromptComposition | undefined {
