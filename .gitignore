@@ -7,16 +7,24 @@ npm-debug.log*
 *.log
 
 # Test
-coverage
+**/coverage
 
 # Build
-dist
+**/dist
+
+# Docs
+TODO.md
+docs/private
+
+# Temp
+temp/
+
+# AI
+.claude
+
+# Editor
+.vscode
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Internal docs
-AGENTS.md
-TODO.md
-docs/private

@@ -54,7 +54,7 @@ function _renderSimpleTemplate(
   // Replace {{optimized.key}} placeholders
   Object.keys(optimized).forEach((key) => {
     const regex = new RegExp(`{{\\s*optimized\\.${key}\\s*}}`, 'g');
-    result = result.replace(regex, optimized[key]);
+    result = result.replace(regex, optimized[key] ?? '');
   });
 
   // Replace {{input.key}} and {{key}} placeholders (backward compatible)

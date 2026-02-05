@@ -3,6 +3,7 @@ import { PromptComposition, PromptCompositionConfig, WrapperStyle } from './comp
 import { PromptComponent } from '../component/component.types.js';
 import {
   UniversalPromptInstance,
+  ChatMessage,
   CostMetadata,
   ComponentMetadata,
   CostConfig,
@@ -382,15 +383,13 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
         }
 
         // Map each component to its role
-        return renderedParts
-          .filter((p) => p.key in messageRoles) // Only include mapped keys
-          .map((p) => {
-            const role = messageRoles[p.key];
-            return {
-              role: role,
-              content: p.renderedText,
-            };
-          });
+        return renderedParts.reduce<ChatMessage[]>((acc, p) => {
+          const role = messageRoles[p.key];
+          if (role) {
+            acc.push({ role, content: p.renderedText });
+          }
+          return acc;
+        }, []);
       };
 
       const promptInstance: UniversalPromptInstance = {

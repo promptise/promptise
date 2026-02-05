@@ -1,0 +1,19 @@
+# Build artifacts
+**/dist
+
+# Test coverage
+**/coverage
+
+# Dependencies
+**/node_modules
+
+# Config files (handled by ESLint)
+*.config.*
+*.mjs
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+
+# Logs
+*.log

@@ -1,6 +1,7 @@
 # ✨ Promptise
 
 [![npm version](https://img.shields.io/npm/v/@promptise/core.svg)](https://www.npmjs.com/package/@promptise/core)
+[![CI](https://github.com/promptise/promptise/actions/workflows/ci.yml/badge.svg)](https://github.com/promptise/promptise/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/promptise/promptise/blob/main/LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)

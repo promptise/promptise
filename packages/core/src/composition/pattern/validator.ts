@@ -38,8 +38,8 @@ const WARNING_TYPE = 'warning' as const;
  * ```
  */
 export function validateComponentContent(
-  componentId: string,
-  patternKey: string,
+  _componentId: string,
+  _patternKey: string,
   text: string,
   validation: ContentValidation,
 ): ComponentValidationResult {

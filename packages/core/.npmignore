@@ -1,6 +1,7 @@
-# Source (dist/ is what gets published)
+# Source files (only dist/ gets published)
 src/
 tsconfig.json
+tsconfig.lint.json
 jest.config.cjs
 
 # Tests
@@ -9,9 +10,7 @@ coverage/
 
 # Dev files
 .DS_Store
-.gitignore
+
+# Internal docs
 AGENTS.md
 TODO.md
-
-# Docs (optional - users can see on GitHub)
-docs/
