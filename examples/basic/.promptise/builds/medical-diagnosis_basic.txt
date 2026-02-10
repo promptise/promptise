@@ -1,0 +1,25 @@
+---
+Composition ID: medical-diagnosis
+Fixture: basic (complete - 4/4)
+Schema Fields:
+  ✓ role (required)
+  ✓ context (required)
+  ✓ task (required)
+  ✓ rules (required)
+Tokens: 68
+---
+<role>
+You are a general practitioner.
+</role>
+<context>
+Context: Patient presenting with fever and headache
+</context>
+<task>
+Task: Provide differential diagnosis
+</task>
+<rules>
+Rules:
+- Consider common conditions first
+- Ask clarifying questions if needed
+- Recommend when to seek emergency care
+</rules>

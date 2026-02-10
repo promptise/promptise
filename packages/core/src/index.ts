@@ -68,5 +68,9 @@ export type { PrebuiltStrategyPatternName } from './strategy/pattern/index.js';
 // --- Export Optimizer Feature ---
 export type { OptimizerConfig, OptimizationMetadata } from './component/optimizer/types.js';
 
+// --- Export Registry Feature ---
+export { Promptise } from './registry/index.js';
+export type { PromptiseConfig, CompositionEntry } from './registry/index.js';
+
 // --- Export Core Utilities ---
 export { formatValidationError, countTokens } from './core/index.js';

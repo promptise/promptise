@@ -4,7 +4,7 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/', '**/coverage/', '**/*.config.*'],
+    ignores: ['**/dist/', '**/coverage/', '**/*.config.*', '**/test-setup.ts'],
   },
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
@@ -56,8 +56,11 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-deprecated': 'off',
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
 );

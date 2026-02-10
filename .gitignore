@@ -12,12 +12,9 @@ npm-debug.log*
 # Build
 **/dist
 
-# Docs
-TODO.md
-docs/private
-
 # Temp
-temp/
+temp
+private
 
 # AI
 .claude
