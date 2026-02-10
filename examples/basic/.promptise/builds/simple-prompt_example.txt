@@ -1,0 +1,10 @@
+---
+Composition ID: simple-prompt
+Fixture: example (complete - 2/2)
+Schema Fields:
+  ✓ role (required)
+  ✓ task (required)
+Tokens: 17
+---
+You are a helpful assistant.
+Task: Answer the user question clearly and concisely

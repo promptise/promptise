@@ -49,15 +49,31 @@ Built-in content validation, token counting, multi-turn strategies, and complian
 
 ---
 
-## 📦 Installation
+## 📦 Packages
+
+Promptise is a monorepo with two packages:
+
+### **@promptise/core**
+
+The main framework for building type-safe, reusable prompts.
 
 ```bash
 npm install @promptise/core
-# or
-pnpm add @promptise/core
-# or
-yarn add @promptise/core
 ```
+
+**Use in production:** Components, Compositions, Patterns, Strategies, Registry.
+
+### **@promptise/cli**
+
+CLI for generating preview files from your prompts.
+
+```bash
+npm install -D @promptise/cli
+```
+
+**Developer tool for:** Preview generation, fixture testing, documentation.
+
+See the CLI documentation for more details.
 
 ---
 
@@ -319,7 +335,53 @@ console.log(strategy.getHistory());
 
 ---
 
-### 5. Token Optimization
+### 5. Registry
+
+**Centralize and organize all your prompts in one place.**
+
+```typescript
+import { Promptise } from '@promptise/core';
+
+// Create registry with your compositions
+export default new Promptise({
+  compositions: [
+    {
+      composition: medicalDiagnosis,
+      fixtures: {
+        // Test data for CLI preview generation
+        basic: { role: 'doctor', task: 'diagnose symptoms' },
+        icu: { role: 'intensivist', task: 'stabilize patient' },
+      },
+    },
+    {
+      composition: codeReview,
+      fixtures: {
+        security: { language: 'typescript', focus: 'security' },
+      },
+    },
+  ],
+});
+
+// Access in your code (production)
+const allCompositions = registry.getCompositions();
+const specific = registry.getComposition('medical-diagnosis');
+
+// CLI uses same registry for preview generation
+// npx promptise build
+```
+
+**Features:**
+
+- ✅ Central catalog for all compositions
+- ✅ Runtime access to compositions by ID
+- ✅ Fixture data for CLI tooling
+- ✅ Single source of truth for your prompt library
+
+**Note:** The registry serves both production (composition access) and CLI tooling (preview generation). Fixtures are only used by the CLI, not in production code.
+
+---
+
+### 6. Token Optimization
 
 **Reduce LLM costs by 30-60% with native TOON integration.**
 
@@ -403,7 +465,73 @@ const completion = await openai.chat.completions.create({
 
 ---
 
-## 🛡️ Type Safety & Validation
+## �️ CLI Development Tools
+
+### Preview Generation
+
+Generate text previews of your prompts for testing and documentation:
+
+```bash
+# Install CLI (dev dependency)
+npm install -D @promptise/cli
+```
+
+**Create config file** (`promptise.config.ts`):
+
+```typescript
+import { Promptise } from '@promptise/core';
+import { medicalDiagnosis, codeReview } from './prompts';
+
+export default new Promptise({
+  compositions: [
+    {
+      composition: medicalDiagnosis,
+      fixtures: {
+        basic: { role: 'doctor', task: 'diagnose symptoms' },
+        icu: { role: 'intensivist', task: 'stabilize patient' },
+      },
+    },
+  ],
+});
+```
+
+**Generate previews:**
+
+```bash
+npx promptise build
+# ✓ Generated 2 previews in .promptise/builds
+```
+
+**Output files:**
+
+```
+.promptise/builds/
+  medical-diagnosis_basic.txt
+  medical-diagnosis_icu.txt
+```
+
+**CLI Features:**
+
+- ✅ Preview generation from fixtures
+- ✅ Fixture completeness analysis (full/partial/placeholder)
+- ✅ Token counting in metadata
+- ✅ Clean output mode for copy-paste
+- ✅ Monorepo support with smart path resolution
+- ✅ Custom output directories
+
+**Use cases:**
+
+- Test prompt variations without LLM calls
+- Generate documentation examples
+- Share prompts with stakeholders
+- Validate fixture completeness
+- Quick prototyping
+
+See the CLI README for complete documentation.
+
+---
+
+## �🛡️ Type Safety & Validation
 
 All validation powered by Zod with enhanced error messages:
 

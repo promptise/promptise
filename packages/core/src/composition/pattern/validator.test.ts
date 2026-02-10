@@ -3,6 +3,16 @@ import { ContentValidation } from './types';
 
 describe('Strategy Validator', () => {
   describe('validateComponentContent', () => {
+    it('should pass validation when no rules are configured', () => {
+      const validation: ContentValidation = {};
+
+      const text = 'Any text content here';
+      const result = validateComponentContent('test-comp', 'task', text, validation);
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
     it('should validate required keywords successfully', () => {
       const validation: ContentValidation = {
         required: ['HIPAA', 'PHI'],
@@ -205,6 +215,23 @@ describe('Strategy Validator', () => {
       expect(formatted).toContain('HIPAA');
       expect(formatted).toContain('FDA');
     });
+
+    it('should format warnings only when no errors', () => {
+      const errors = [
+        { type: 'warning' as const, message: 'Recommended keyword "FDA" not found' },
+        { type: 'warning' as const, message: 'Recommended keyword "HIPAA" not found' },
+      ];
+
+      const formatted = formatValidationErrors('test-comp', 'rules', errors);
+
+      expect(formatted).toContain('[Promptise]');
+      expect(formatted).toContain('test-comp');
+      expect(formatted).toContain('rules');
+      expect(formatted).toContain('Warnings:');
+      expect(formatted).not.toContain('Errors:');
+      expect(formatted).toContain('FDA');
+      expect(formatted).toContain('HIPAA');
+    });
   });
 
   describe('Edge cases - Keywords with special characters', () => {
@@ -278,6 +305,32 @@ describe('Strategy Validator', () => {
 
       // Empty strings should be ignored
       expect(result.valid).toBe(true);
+    });
+
+    it('should handle empty keywords in optional array', () => {
+      const validation: ContentValidation = {
+        optional: ['', '  ', 'recommended'],
+      };
+
+      const text = 'This has the recommended keyword.';
+      const result = validateComponentContent('test-comp', 'task', text, validation);
+
+      // Empty strings should be ignored
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should handle empty keywords in forbidden array', () => {
+      const validation: ContentValidation = {
+        forbidden: ['', '  ', 'banned'],
+      };
+
+      const text = 'This text is allowed.';
+      const result = validateComponentContent('test-comp', 'task', text, validation);
+
+      // Empty strings should be ignored, only 'banned' should be checked
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
     });
 
     it('should handle empty text being validated', () => {
