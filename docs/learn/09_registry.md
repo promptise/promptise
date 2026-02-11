@@ -71,6 +71,97 @@ export default new Promptise({
 
 ---
 
+## Registering Compositions
+
+The registry accepts compositions in two formats, giving you flexibility based on whether you need fixtures or not.
+
+### Direct Format (No Fixtures)
+
+When you don't need fixtures for a composition, pass it directly to the array:
+
+```typescript
+import { Promptise, createPromptComposition } from '@promptise/core';
+
+const composition1 = createPromptComposition({
+  id: 'simple-prompt',
+  components: [/* ... */],
+});
+
+const composition2 = createPromptComposition({
+  id: 'another-prompt',
+  components: [/* ... */],
+});
+
+export default new Promptise({
+  compositions: [composition1, composition2], // Direct format
+});
+```
+
+**When to use:**
+- Simple catalog of compositions
+- Compositions used only in production code
+- Quick setup (CLI generates placeholder preview automatically)
+
+---
+
+### Object Format (With Fixtures)
+
+When you need fixtures for CLI tooling, use the object format:
+
+```typescript
+export default new Promptise({
+  compositions: [
+    {
+      composition: medicalDiagnosis,
+      fixtures: {
+        basic: { role: 'doctor', task: 'diagnose symptoms' },
+        icu: { role: 'intensivist', task: 'stabilize patient' },
+      },
+    },
+  ],
+});
+```
+
+**When to use:**
+- Need fixtures for CLI preview generation
+- Testing multiple scenarios
+- Documentation examples
+
+---
+
+### Mixed Format
+
+You can combine both formats in the same registry:
+
+```typescript
+export default new Promptise({
+  compositions: [
+    // Direct format (no fixtures)
+    simplePrompt,
+    anotherPrompt,
+
+    // Object format (with fixtures)
+    {
+      composition: complexPrompt,
+      fixtures: {
+        scenario1: { /* ... */ },
+        scenario2: { /* ... */ },
+      },
+    },
+
+    // Object format without fixtures (explicit)
+    { composition: yetAnotherPrompt },
+  ],
+});
+```
+
+**When to use:**
+- Mix of compositions with and without fixtures
+- Gradual migration (adding fixtures over time)
+- Different tooling needs per composition
+
+---
+
 ## Core Concepts
 
 ### Registry as Central Catalog
@@ -464,18 +555,26 @@ npx promptise build --config apps/medical-app/promptise.config.ts
 
 ### **Q: Are fixtures required?**
 
-**A:** No, fixtures are optional. You can register compositions without fixtures:
+**A:** No, fixtures are optional. You can register compositions without fixtures using either format:
 
 ```typescript
 export default new Promptise({
   compositions: [
-    { composition: myPrompt }, // No fixtures - won't generate previews
-    { composition: anotherPrompt, fixtures: { test: {...} } }, // Has fixtures
+    // Direct format (no fixtures)
+    myPrompt,
+
+    // Object format without fixtures
+    { composition: anotherPrompt },
+
+    // Object format with fixtures
+    { composition: yetAnotherPrompt, fixtures: { test: {...} } },
   ],
 });
 ```
 
-CLI will only generate previews for compositions with fixtures.
+**CLI behavior:**
+- Compositions **with fixtures**: Generates one preview per fixture
+- Compositions **without fixtures**: Generates a single `{compositionId}_placeholder.txt` with empty data (all placeholders visible)
 
 ---
 

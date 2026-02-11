@@ -218,37 +218,64 @@ describe('generatePreviews', () => {
       expect(stats.totalWarnings).toBeGreaterThan(0);
     });
 
-    it('should warn when no fixtures exist', async () => {
+    it('should generate placeholder preview when no fixtures exist', async () => {
       mockRegistry.getCompositions.mockReturnValue([
         {
-          composition: { id: 'empty-comp', schema: z.object({}) },
-          fixtures: {},
-        },
-      ]);
-
-      await generatePreviews(mockRegistry, {
-        outdir: '.promptise/builds',
-        verbose: true,
-      });
-
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No fixtures'));
-    });
-
-    it('should not warn when no fixtures and verbose=false', async () => {
-      mockRegistry.getCompositions.mockReturnValue([
-        {
-          composition: { id: 'empty-comp', schema: z.object({}) },
+          composition: {
+            id: 'empty-comp',
+            schema: z.object({
+              field1: z.string(),
+              field2: z.string(),
+            }),
+            build: jest.fn(() => ({
+              asString: () => `Field1: {{field1}}, Field2: {{field2}}`,
+              metadata: { tokenCount: 5 },
+            })),
+          },
           fixtures: {},
         },
       ]);
 
       const stats = await generatePreviews(mockRegistry, {
         outdir: '.promptise/builds',
-        verbose: false,
       });
 
-      expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('No fixtures'));
-      expect(stats.totalBuilds).toBe(0);
+      // Should generate one preview with "placeholder" fixture name
+      expect(stats.totalBuilds).toBe(1);
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        expect.stringContaining('empty-comp_placeholder.txt'),
+        expect.any(String),
+        'utf-8',
+      );
+    });
+
+    it('should generate placeholder preview when fixtures is undefined', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'no-fixtures',
+            schema: z.object({
+              name: z.string(),
+            }),
+            build: jest.fn(() => ({
+              asString: () => `Name: {{name}}`,
+              metadata: { tokenCount: 3 },
+            })),
+          },
+          fixtures: undefined,
+        },
+      ]);
+
+      const stats = await generatePreviews(mockRegistry, {
+        outdir: '.promptise/builds',
+      });
+
+      expect(stats.totalBuilds).toBe(1);
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        expect.stringContaining('no-fixtures_placeholder.txt'),
+        expect.any(String),
+        'utf-8',
+      );
     });
   });
 
