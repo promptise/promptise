@@ -12,7 +12,7 @@ export type {
   CostMetadata,
   ComponentMetadata,
   CostConfig,
-} from './core/index.js';
+} from './utils/index.js';
 
 // --- Export Component Feature ---
 export { createPromptComponent } from './component/index.js';
@@ -73,4 +73,4 @@ export { Promptise } from './registry/index.js';
 export type { PromptiseConfig, CompositionEntry } from './registry/index.js';
 
 // --- Export Core Utilities ---
-export { formatValidationError, countTokens } from './core/index.js';
+export { formatValidationError, countTokens } from './utils/index.js';

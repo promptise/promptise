@@ -4,9 +4,9 @@ import {
   PromptComponentConfig,
   ComponentRenderResult,
 } from './component.types.js';
-import { formatValidationError } from '../core/errors/index.js';
+import { formatValidationError } from '../utils/errors/index.js';
 import { optimizeInput, type OptimizationMetadata } from './optimizer/index.js';
-import { validateComponentContent } from '../composition/pattern/validator.js';
+import { validateComponentContent } from '../composition/pattern/composition-pattern.validator.js';
 
 /**
  * Validates that a component key follows the required format.

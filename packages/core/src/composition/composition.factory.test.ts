@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createPromptComponent } from '../component';
 import { createPromptComposition } from './composition.factory';
-import { createCompositionPattern } from './pattern/factory';
+import { createCompositionPattern } from './pattern/composition-pattern.factory';
 
 // Example pricing config for tests
 const EXAMPLE_PRICING = {

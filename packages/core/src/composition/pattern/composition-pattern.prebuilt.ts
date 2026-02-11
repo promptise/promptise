@@ -1,4 +1,4 @@
-import { createCompositionPattern } from './factory.js';
+import { createCompositionPattern } from './composition-pattern.factory.js';
 
 /**
  * RACE pattern: Role, Action, Context, Examples.

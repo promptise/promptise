@@ -1,4 +1,4 @@
-import { CompositionPattern } from './types.js';
+import { CompositionPattern } from './composition-pattern.types.js';
 
 /**
  * Factory function to create a CompositionPattern object.

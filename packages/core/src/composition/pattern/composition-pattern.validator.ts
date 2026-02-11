@@ -1,5 +1,9 @@
-import { ContentValidation, ValidationError, ComponentValidationResult } from './types.js';
-import { countTokens } from '../../core/tokenizer/tokenizer.js';
+import {
+  ContentValidation,
+  ValidationError,
+  ComponentValidationResult,
+} from './composition-pattern.types.js';
+import { countTokens } from '../../utils/tokenizer/tokenizer.js';
 
 // Constants for validation error types
 const ERROR_TYPE = 'error' as const;

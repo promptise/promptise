@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { createStrategyPattern } from './factory.js';
+import { createStrategyPattern } from './strategy-pattern.factory.js';
 
 describe('createStrategyPattern', () => {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

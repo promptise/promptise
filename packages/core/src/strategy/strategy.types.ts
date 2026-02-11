@@ -1,6 +1,6 @@
 import { PromptComposition } from '../composition/composition.types.js';
-import { UniversalPromptInstance } from '../core/core.types.js';
-import { StrategyPattern } from './pattern/types.js';
+import { UniversalPromptInstance } from '../utils/core.types.js';
+import { StrategyPattern } from './pattern/strategy-pattern.types.js';
 
 /**
  * @interface StrategyHistory

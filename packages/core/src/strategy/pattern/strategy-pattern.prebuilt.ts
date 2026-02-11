@@ -1,4 +1,4 @@
-import { createStrategyPattern } from './factory.js';
+import { createStrategyPattern } from './strategy-pattern.factory.js';
 
 /**
  * Draft → Critique → Refine pattern.

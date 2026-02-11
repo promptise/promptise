@@ -1,5 +1,5 @@
-import { validateComponentContent, formatValidationErrors } from './validator';
-import { ContentValidation } from './types';
+import { validateComponentContent, formatValidationErrors } from './composition-pattern.validator';
+import { ContentValidation } from './composition-pattern.types';
 
 describe('Strategy Validator', () => {
   describe('validateComponentContent', () => {

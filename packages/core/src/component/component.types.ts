@@ -1,6 +1,6 @@
 import { z, ZodObject, ZodRawShape } from 'zod';
 import type { OptimizerConfig, OptimizationMetadata } from './optimizer/types.js';
-import type { ContentValidation } from '../composition/pattern/types.js';
+import type { ContentValidation } from '../composition/pattern/composition-pattern.types.js';
 
 /**
  * Result returned by component.render()
