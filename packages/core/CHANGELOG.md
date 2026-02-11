@@ -5,6 +5,33 @@ All notable changes to **@promptise/core** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-11
+
+### Added
+
+- **Registry**: New `Promptise` class for centralizing compositions
+  - `getCompositions()` - Returns all compositions with optional fixtures
+  - `getComposition(id)` - Retrieves specific composition entry by ID
+  - Unique ID validation on instantiation
+  - Flexible composition input - accept compositions directly or as objects
+  - `CompositionInput` union type for cleaner registration syntax
+- **Types**: Exported `Promptise`, `PromptiseConfig`, `CompositionEntry`, and `CompositionInput`
+
+### Changed
+
+- **File Naming**: Standardized pattern files with feature prefixes for better IDE navigation
+  - `composition/pattern/factory.ts` → `composition/pattern/composition-pattern.factory.ts`
+  - `strategy/pattern/factory.ts` → `strategy/pattern/strategy-pattern.factory.ts`
+  - Applied to all pattern module files (factory, types, prebuilt, validator)
+- **Folder Structure**: Renamed `core/` → `utils/` to avoid redundant nesting (`core/src/core/` → `core/src/utils/`)
+
+### Documentation
+
+- Added `docs/learn/09_registry.md` - Complete Registry guide with flexible composition formats
+- Added `docs/conventions/file-naming.md` - File naming conventions guide
+- Updated root README with Registry examples (direct and object formats)
+- Updated `docs/conventions/commits-and-branches.md` with clearer formatting
+
 ## [1.0.0] - 2026-02-03
 
 ### Added

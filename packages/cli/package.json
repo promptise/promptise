@@ -19,15 +19,10 @@
     "lint": "prettier --write . --cache --ignore-path ../../.prettierignore --log-level error && eslint . --fix",
     "lint:ci": "prettier --check . --cache --ignore-path ../../.prettierignore --log-level error && eslint .",
     "pack": "npm pack --dry-run",
-    "preversion": "npm run validate",
-    "postversion": "git push && git push --tags",
-    "prepublishOnly": "npm run validate",
-    "release:patch": "npm version patch && npm publish --access public",
-    "release:minor": "npm version minor && npm publish --access public",
-    "release:major": "npm version major && npm publish --access public",
-    "release:prerelease": "npm version prerelease && npm publish --access public --tag next",
-    "release:dry": "npm version --dry-run",
-    "validate": "npm run lint:ci && npm test && npm run build"
+    "preversion": "npm run validate:ci",
+    "prepublishOnly": "npm run validate:ci",
+    "validate": "npm run build && npm run lint && npm test",
+    "validate:ci": "npm run build && npm run lint:ci && npm test"
   },
   "keywords": [
     "promptise",
@@ -52,7 +47,7 @@
     "url": "https://github.com/promptise/promptise/issues"
   },
   "peerDependencies": {
-    "@promptise/core": "^1.0.0"
+    "@promptise/core": "^1.1.0"
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -60,6 +55,6 @@
     "tsx": "^4.19.2"
   },
   "devDependencies": {
-    "@promptise/core": "^1.0.0"
+    "@promptise/core": "^1.1.0"
   }
 }
