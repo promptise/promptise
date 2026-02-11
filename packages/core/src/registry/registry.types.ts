@@ -1,6 +1,33 @@
 import { PromptComposition } from '../composition/composition.types.js';
 
 /**
+ * Input format for compositions in the registry.
+ *
+ * Accepts two formats:
+ * - **Direct**: Pass `PromptComposition` directly (no fixtures needed)
+ * - **Object**: Pass `CompositionEntry` object (with optional fixtures)
+ *
+ * Both formats can be mixed in the same array.
+ *
+ * @example
+ * // Direct format (no fixtures)
+ * const registry = new Promptise({
+ *   compositions: [medicalDiagnosis, codeReview, simplePrompt]
+ * });
+ *
+ * @example
+ * // Mixed format
+ * const registry = new Promptise({
+ *   compositions: [
+ *     medicalDiagnosis,  // direct
+ *     { composition: codeReview, fixtures: { test: {...} } },  // with fixtures
+ *     simplePrompt  // direct
+ *   ]
+ * });
+ */
+export type CompositionInput = PromptComposition | CompositionEntry;
+
+/**
  * A composition entry in the registry with optional fixture data.
  *
  * Fixtures are mock/test data used by the CLI to generate preview prompts.
@@ -43,13 +70,23 @@ export interface CompositionEntry {
 /**
  * Configuration for creating a Promptise registry instance.
  *
- * The registry centralizes all compositions and their fixture data.
- * It serves as the configuration point for the Promptise CLI.
+ * Compositions can be passed in two formats:
+ * 1. **Direct format**: Pass `PromptComposition` directly (no fixtures needed)
+ * 2. **Object format**: Pass `CompositionEntry` object (with fixtures)
+ *
+ * Both formats can be mixed in the same array.
  *
  * @example
+ * // Direct format (no fixtures)
  * import { Promptise } from '@promptise/core';
- * import { medicalDiagnosis, codeReview } from './prompts';
+ * import { medicalDiagnosis, codeReview, simplePrompt } from './prompts';
  *
+ * export default new Promptise({
+ *   compositions: [medicalDiagnosis, codeReview, simplePrompt]
+ * });
+ *
+ * @example
+ * // Object format (with fixtures)
  * export default new Promptise({
  *   compositions: [
  *     {
@@ -58,22 +95,33 @@ export interface CompositionEntry {
  *         basic: { role: 'general practitioner', task: 'diagnose common symptoms' },
  *         icu: { role: 'intensivist', task: 'stabilize critical patient' }
  *       }
- *     },
+ *     }
+ *   ]
+ * });
+ *
+ * @example
+ * // Mixed format
+ * export default new Promptise({
+ *   compositions: [
+ *     medicalDiagnosis,  // direct (no fixtures)
  *     {
  *       composition: codeReview,
- *       fixtures: {
- *         security: { language: 'typescript', focus: 'security vulnerabilities' }
- *       }
- *     }
+ *       fixtures: { security: { language: 'typescript', focus: 'security' } }
+ *     },
+ *     simplePrompt  // direct (no fixtures)
  *   ]
  * });
  */
 export interface PromptiseConfig {
   /**
-   * Array of composition entries with optional fixtures.
+   * Array of compositions.
    *
-   * Each entry contains a composition and its associated fixture data for CLI tooling.
+   * Accepts two formats:
+   * 1. **Direct**: `PromptComposition` (no fixtures)
+   * 2. **Object**: `CompositionEntry` (with optional fixtures)
+   *
+   * Both formats can be mixed in the same array.
    * The order determines the order in CLI outputs and listings.
    */
-  compositions: CompositionEntry[];
+  compositions: CompositionInput[];
 }

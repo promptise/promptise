@@ -342,7 +342,12 @@ console.log(strategy.getHistory());
 ```typescript
 import { Promptise } from '@promptise/core';
 
-// Create registry with your compositions
+// Simple format - pass compositions directly
+export default new Promptise({
+  compositions: [medicalDiagnosis, codeReview, legalReview],
+});
+
+// Or with fixtures for CLI preview generation
 export default new Promptise({
   compositions: [
     {
@@ -353,12 +358,7 @@ export default new Promptise({
         icu: { role: 'intensivist', task: 'stabilize patient' },
       },
     },
-    {
-      composition: codeReview,
-      fixtures: {
-        security: { language: 'typescript', focus: 'security' },
-      },
-    },
+    codeReview, // Mix formats as needed
   ],
 });
 

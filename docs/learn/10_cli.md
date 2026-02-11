@@ -56,6 +56,15 @@ export default new Promptise({
 });
 ```
 
+**Alternative:** Pass compositions directly without fixtures for simpler setup. The CLI will generate placeholder previews:
+
+```typescript
+export default new Promptise({
+  compositions: [medicalDiagnosis], // Direct format
+});
+// Generates: medical-diagnosis_placeholder.txt with {{placeholders}}
+```
+
 ### 2. Generate Previews
 
 ```bash

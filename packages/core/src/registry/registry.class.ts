@@ -1,4 +1,4 @@
-import { PromptiseConfig, CompositionEntry } from './registry.types.js';
+import { PromptiseConfig, CompositionEntry, CompositionInput } from './registry.types.js';
 
 /**
  * Central registry for prompt compositions and their fixture data.
@@ -61,29 +61,35 @@ export class Promptise {
   /**
    * Creates a new Promptise registry instance.
    *
-   * Validates that all composition IDs are unique and stores composition entries
-   * with their fixture data for access by CLI and other tooling.
+   * Accepts compositions in two formats:
+   * - **Direct**: `PromptComposition` (no fixtures)
+   * - **Object**: `CompositionEntry` (with optional fixtures)
    *
-   * @param config - Registry configuration with composition entries
+   * Both formats can be mixed. Validates that all composition IDs are unique.
+   *
+   * @param config - Registry configuration with compositions
    * @throws {Error} When duplicate composition IDs are found
    *
    * @example
+   * // Direct format
+   * const registry = new Promptise({
+   *   compositions: [comp1, comp2, comp3]
+   * });
+   *
+   * @example
+   * // Mixed format
    * const registry = new Promptise({
    *   compositions: [
-   *     {
-   *       composition: createPromptComposition({ id: 'prompt-1', components: [...] }),
-   *       fixtures: { test: { ... } }
-   *     },
-   *     {
-   *       composition: createPromptComposition({ id: 'prompt-2', components: [...] }),
-   *       fixtures: { basic: { ... } }
-   *     }
+   *     comp1,  // direct
+   *     { composition: comp2, fixtures: { test: {...} } },
+   *     comp3   // direct
    *   ]
    * });
    */
   constructor(config: PromptiseConfig) {
-    this.validateUniqueIds(config.compositions);
-    this._compositions = config.compositions;
+    const normalizedEntries = this.normalizeEntries(config.compositions);
+    this.validateUniqueIds(normalizedEntries);
+    this._compositions = normalizedEntries;
   }
 
   /**
@@ -155,6 +161,43 @@ export class Promptise {
    */
   getComposition(id: string): CompositionEntry | undefined {
     return this._compositions.find((entry) => entry.composition.id === id);
+  }
+
+  /**
+   * Type guard to distinguish between CompositionEntry and PromptComposition.
+   *
+   * @param input - The input to check
+   * @returns True if input is CompositionEntry, false if PromptComposition
+   *
+   * @private
+   */
+  private isCompositionEntry(input: CompositionInput): input is CompositionEntry {
+    return 'composition' in input && typeof input === 'object';
+  }
+
+  /**
+   * Normalizes composition inputs to CompositionEntry format.
+   *
+   * Accepts:
+   * - PromptComposition: Wraps in `{ composition, fixtures: undefined }`
+   * - CompositionEntry: Returns as-is
+   *
+   * @param inputs - Array of compositions in any accepted format
+   * @returns Normalized array of CompositionEntry objects
+   *
+   * @private
+   */
+  private normalizeEntries(inputs: CompositionInput[]): CompositionEntry[] {
+    return inputs.map((input) => {
+      if (this.isCompositionEntry(input)) {
+        return input;
+      }
+
+      return {
+        composition: input,
+        fixtures: undefined,
+      };
+    });
   }
 
   /**

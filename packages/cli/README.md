@@ -52,6 +52,8 @@ export default new Promptise({
 });
 ```
 
+> **Note:** You can also pass compositions directly without fixtures: `compositions: [comp1, comp2]`. The CLI will generate placeholder previews showing the prompt structure with visible `{{placeholders}}`.
+
 ### Generate Previews
 
 ```bash

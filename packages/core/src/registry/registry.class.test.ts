@@ -87,6 +87,146 @@ describe('Promptise', () => {
     });
   });
 
+  describe('Direct composition format', () => {
+    it('should accept compositions directly without wrapper object', () => {
+      const registry = new Promptise({
+        compositions: [composition1, composition2, composition3],
+      });
+
+      expect(registry.getCompositions()).toHaveLength(3);
+      expect(registry.getCompositions()[0]?.composition).toBe(composition1);
+      expect(registry.getCompositions()[0]?.fixtures).toBeUndefined();
+      expect(registry.getCompositions()[1]?.composition).toBe(composition2);
+      expect(registry.getCompositions()[1]?.fixtures).toBeUndefined();
+      expect(registry.getCompositions()[2]?.composition).toBe(composition3);
+      expect(registry.getCompositions()[2]?.fixtures).toBeUndefined();
+    });
+
+    it('should handle empty array with direct format', () => {
+      const registry = new Promptise({
+        compositions: [],
+      });
+
+      expect(registry.getCompositions()).toHaveLength(0);
+    });
+
+    it('should allow getComposition() to work with direct format', () => {
+      const registry = new Promptise({
+        compositions: [composition1, composition2],
+      });
+
+      const entry = registry.getComposition('comp-1');
+      expect(entry).toBeDefined();
+      expect(entry?.composition).toBe(composition1);
+      expect(entry?.fixtures).toBeUndefined();
+    });
+  });
+
+  describe('Mixed composition formats', () => {
+    it('should accept mixed formats (direct and with fixtures)', () => {
+      const registry = new Promptise({
+        compositions: [
+          composition1, // direct
+          { composition: composition2, fixtures: { test: { task: 'test task' } } }, // object
+          composition3, // direct
+        ],
+      });
+
+      const entries = registry.getCompositions();
+      expect(entries).toHaveLength(3);
+
+      // First entry: direct (no fixtures)
+      expect(entries[0]?.composition).toBe(composition1);
+      expect(entries[0]?.fixtures).toBeUndefined();
+
+      // Second entry: object (with fixtures)
+      expect(entries[1]?.composition).toBe(composition2);
+      expect(entries[1]?.fixtures).toBeDefined();
+      expect(entries[1]?.fixtures?.test).toEqual({ task: 'test task' });
+
+      // Third entry: direct (no fixtures)
+      expect(entries[2]?.composition).toBe(composition3);
+      expect(entries[2]?.fixtures).toBeUndefined();
+    });
+
+    it('should preserve fixture data when using object format', () => {
+      const fixtures = {
+        basic: { role: 'doctor', task: 'diagnose' },
+        icu: { role: 'intensivist', task: 'stabilize' },
+      };
+
+      const registry = new Promptise({
+        compositions: [
+          composition1, // direct
+          { composition: composition2, fixtures },
+        ],
+      });
+
+      const entry = registry.getComposition('comp-2');
+      expect(entry?.fixtures).toEqual(fixtures);
+    });
+  });
+
+  describe('Validation with new formats', () => {
+    it('should detect duplicate IDs with direct format', () => {
+      expect(() => {
+        new Promptise({
+          compositions: [composition1, composition1], // duplicate
+        });
+      }).toThrow(/duplicate composition IDs/i);
+    });
+
+    it('should detect duplicate IDs in mixed format', () => {
+      expect(() => {
+        new Promptise({
+          compositions: [
+            composition1, // direct
+            { composition: composition1, fixtures: { test: {} } }, // duplicate
+          ],
+        });
+      }).toThrow(/duplicate composition IDs/i);
+    });
+
+    it('should detect duplicates across different formats', () => {
+      expect(() => {
+        new Promptise({
+          compositions: [
+            { composition: composition1, fixtures: { a: {} } },
+            composition1, // duplicate
+            { composition: composition1 }, // duplicate
+          ],
+        });
+      }).toThrow(/duplicate composition IDs/i);
+    });
+  });
+
+  describe('Backwards compatibility', () => {
+    it('should still accept old object-only format', () => {
+      const registry = new Promptise({
+        compositions: [
+          { composition: composition1, fixtures: { basic: { role: 'doctor' } } },
+          { composition: composition2 },
+        ],
+      });
+
+      expect(registry.getCompositions()).toHaveLength(2);
+    });
+
+    it('should work with existing code patterns', () => {
+      // Este test simula código existente que no debe romperse
+      const config = {
+        compositions: [
+          { composition: composition1 },
+          { composition: composition2, fixtures: {} },
+          { composition: composition3, fixtures: { test: {} } },
+        ],
+      };
+
+      const registry = new Promptise(config);
+      expect(registry.getCompositions()).toHaveLength(3);
+    });
+  });
+
   describe('getCompositions()', () => {
     it('should return all composition entries', () => {
       const registry = new Promptise({

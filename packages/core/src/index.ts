@@ -70,7 +70,7 @@ export type { OptimizerConfig, OptimizationMetadata } from './component/optimize
 
 // --- Export Registry Feature ---
 export { Promptise } from './registry/index.js';
-export type { PromptiseConfig, CompositionEntry } from './registry/index.js';
+export type { PromptiseConfig, CompositionEntry, CompositionInput } from './registry/index.js';
 
 // --- Export Core Utilities ---
 export { formatValidationError, countTokens } from './utils/index.js';

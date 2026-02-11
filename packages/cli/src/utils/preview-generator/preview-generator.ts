@@ -54,14 +54,13 @@ export async function generatePreviews(
     }
 
     const fixtureData = fixtures ?? {};
-    if (Object.keys(fixtureData).length === 0) {
-      if (verbose) {
-        logger.warn(`No fixtures for composition: ${composition.id}`);
-      }
-      continue;
-    }
 
-    for (const [name, data] of Object.entries(fixtureData)) {
+    // If no fixtures provided, generate a placeholder preview with empty data
+    // This allows users to see the composition structure even without fixtures
+    const fixturesToProcess =
+      Object.keys(fixtureData).length === 0 ? { placeholder: {} } : fixtureData;
+
+    for (const [name, data] of Object.entries(fixturesToProcess)) {
       // Filter by fixture name if specified
       if (fixtureName && name !== fixtureName) {
         continue;

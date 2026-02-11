@@ -5,4 +5,4 @@
  */
 
 export { Promptise } from './registry.class.js';
-export type { PromptiseConfig, CompositionEntry } from './registry.types.js';
+export type { PromptiseConfig, CompositionEntry, CompositionInput } from './registry.types.js';
