@@ -1,4 +1,4 @@
-import { StrategyPattern, StrategyPatternConfig } from './types.js';
+import { StrategyPattern, StrategyPatternConfig } from './strategy-pattern.types.js';
 
 /**
  * Creates a StrategyPattern object.

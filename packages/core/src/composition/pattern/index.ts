@@ -2,7 +2,7 @@
  * Composition Pattern module - Structural validation for compositions
  */
 
-export { createCompositionPattern } from './factory.js';
+export { createCompositionPattern } from './composition-pattern.factory.js';
 export type {
   CompositionPattern,
   CompositionPatternComponent,
@@ -11,8 +11,11 @@ export type {
   CustomValidator,
   ValidationError,
   ComponentValidationResult,
-} from './types.js';
-export { validateComponentContent, formatValidationErrors } from './validator.js';
+} from './composition-pattern.types.js';
+export {
+  validateComponentContent,
+  formatValidationErrors,
+} from './composition-pattern.validator.js';
 export {
   PREBUILT_PATTERNS,
   RACE_PATTERN,
@@ -20,5 +23,5 @@ export {
   CHAIN_OF_THOUGHT_PATTERN,
   FEW_SHOT_PATTERN,
   REACT_PATTERN,
-} from './prebuilt.js';
-export type { PrebuiltPatternName } from './prebuilt.js';
+} from './composition-pattern.prebuilt.js';
+export type { PrebuiltPatternName } from './composition-pattern.prebuilt.js';

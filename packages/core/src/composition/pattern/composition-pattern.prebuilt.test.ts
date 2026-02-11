@@ -6,7 +6,7 @@ import {
   REACT_PATTERN,
   PREBUILT_PATTERNS,
   type PrebuiltPatternName,
-} from './prebuilt';
+} from './composition-pattern.prebuilt';
 
 describe('Prebuilt Strategies', () => {
   describe('RACE_PATTERN', () => {

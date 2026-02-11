@@ -1,6 +1,6 @@
 import { encode } from '@toon-format/toon';
 import type { OptimizerConfig, OptimizationResult, OptimizationMetadata } from './types.js';
-import { countTokens } from '../../core/tokenizer/tokenizer.js';
+import { countTokens } from '../../utils/tokenizer/tokenizer.js';
 
 export type { OptimizationMetadata };
 

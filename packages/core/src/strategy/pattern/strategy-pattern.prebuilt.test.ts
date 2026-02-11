@@ -7,7 +7,7 @@ import {
   ANALYSIS_HYPOTHESIS_TEST_PATTERN,
   PREBUILT_STRATEGY_PATTERNS,
   type PrebuiltStrategyPatternName,
-} from './prebuilt';
+} from './strategy-pattern.prebuilt';
 
 describe('Prebuilt Strategy Patterns', () => {
   describe('DRAFT_CRITIQUE_REFINE_PATTERN', () => {

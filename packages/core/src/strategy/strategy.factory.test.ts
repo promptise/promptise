@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createPromptStrategy } from './strategy.factory.js';
 import { createPromptComposition } from '../composition/composition.factory.js';
 import { createPromptComponent } from '../component/component.factory.js';
-import { createStrategyPattern } from './pattern/factory.js';
+import { createStrategyPattern } from './pattern/strategy-pattern.factory.js';
 import { z } from 'zod';
 
 // Mock TOON library

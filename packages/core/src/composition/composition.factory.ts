@@ -8,11 +8,14 @@ import {
   ComponentMetadata,
   CostConfig,
   OptimizationMetadata,
-} from '../core/core.types.js';
-import { CompositionPattern } from './pattern/types.js';
-import { countTokens } from '../core/tokenizer/tokenizer.js';
-import { formatValidationError } from '../core/errors/errors.js';
-import { validateComponentContent, formatValidationErrors } from './pattern/validator.js';
+} from '../utils/core.types.js';
+import { CompositionPattern } from './pattern/composition-pattern.types.js';
+import { countTokens } from '../utils/tokenizer/tokenizer.js';
+import { formatValidationError } from '../utils/errors/errors.js';
+import {
+  validateComponentContent,
+  formatValidationErrors,
+} from './pattern/composition-pattern.validator.js';
 
 /**
  * Validates that a composition ID follows the required format.

@@ -1,7 +1,7 @@
 import { ZodObject } from 'zod';
 import { PromptComponent } from '../component/component.types.js';
-import { UniversalPromptInstance, CostConfig } from '../core/core.types.js';
-import { CompositionPattern } from './pattern/types.js';
+import { UniversalPromptInstance, CostConfig } from '../utils/core.types.js';
+import { CompositionPattern } from './pattern/composition-pattern.types.js';
 
 /**
  * @typedef MessageRole

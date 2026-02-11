@@ -1,4 +1,4 @@
-import { createCompositionPattern } from './factory';
+import { createCompositionPattern } from './composition-pattern.factory';
 
 describe('createCompositionPattern', () => {
   it('should create a valid composition pattern', () => {

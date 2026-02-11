@@ -2,85 +2,92 @@
 
 > TypeScript prompt engineering framework focused on developer experience.
 
-## Project Architecture
+## Project Structure
 
-Monorepo managed with npm workspaces.
+Monorepo with npm workspaces.
 
 ```
 packages/
 └── core/                  # @promptise/core
     ├── src/
+    │   ├── component/
+    │   ├── composition/
+    │   │   └── pattern/   # composition-pattern.*.ts
+    │   ├── strategy/
+    │   │   └── pattern/   # strategy-pattern.*.ts
+    │   ├── registry/
+    │   └── utils/         # core.types.ts, errors/, tokenizer/
     ├── CHANGELOG.md
     └── package.json
 docs/
 ├── conventions/           # Commits, branches, code standards
 └── learn/                 # Tutorials and guides
-README.md
 ```
 
 ## Commands
 
+```bash
+npm run validate  # lint + test + build
+npm run lint      # ESLint
+npm run test      # Jest
+npm run build     # TypeScript compilation
 ```
-npm run validate
-├── npm run lint       → ESLint
-├── npm run test       → Jest
-└── npm run build      → tsc
-```
+
+## File Naming Conventions
+
+**Pattern**: `[feature-name].[type].ts`
+
+- **Single-word features**: Use dots as separators
+  - `component.factory.ts`, `component.types.ts`
+  - `registry.class.ts`, `registry.types.ts`
+
+- **Multi-word features**: Use hyphens in feature name, dots for type
+  - `composition-pattern.factory.ts`
+  - `composition-pattern.types.ts`
+  - `strategy-pattern.prebuilt.ts`
+
+- **Test files**: Add `.test` before `.ts`
+  - `composition-pattern.factory.test.ts`
+  - `registry.class.test.ts`
 
 ## Core Principles
 
 ### Clarity & Minimalism
+- Write self-documenting code
+- Implement only what's needed, no speculative features
+- Avoid premature abstractions
+- Use early returns and guard clauses
 
-- Write code understandable without additional context
-- Implement only what's needed, no "preventive code"
-- Avoid premature abstractions and unnecessary patterns
-- Anticipate effects of current code, not hypothetical futures
-
-### Strict Type Safety
-
-- Use strict TypeScript
-- Avoid `any`/`unknown` without explicit type guards
-- Prefer enums or string literals over generic strings
-
-### Code Style
-
-- Early returns: exit fast on invalid conditions
-- Guard clauses: validate inputs at function start
-- Consistency: review existing APIs before proposing new ones
-- Code, comments, and docs: always in English
+### Type Safety
+- Strict TypeScript mode
+- Avoid `any`/`unknown` without type guards
+- Prefer string literals/enums over generic strings
 
 ### API Design
-
-- Public APIs: design for clarity and consistency
-- Breaking changes: avoid at all costs, use deprecation patterns
-- Exports: explicit and minimal surface area
-- Backwards compatibility: maintain across minor versions
+- Consistent with existing patterns
+- Breaking changes require deprecation path
+- Minimal, explicit export surface
+- Maintain backwards compatibility in minor versions
 
 ### Documentation
+- JSDoc with `@example` for public APIs
+- Document type parameters, exceptions, edge cases
+- Update related docs on changes
 
-- JSDoc with `@example` for all public APIs
-- Update related JSDoc and markdown on changes
-- Document type parameters, exceptions, and edge cases
+### Quality Standards
+- Tree-shakeable exports
+- Unit tests for public APIs
+- Clear, actionable error messages
+- Semantic versioning
 
-### Library Standards
+## Development Workflow
 
-- Tree-shakeable exports with comprehensive TypeScript definitions
-- Unit test coverage for all public APIs
-- Clear error messages with actionable guidance
-- Semantic versioning strictness
-
-## Development Process
-
-1. **Analyze** existing APIs and patterns
-2. **Propose** with public API impact and breaking change assessment
-3. **Approval** required for public API and breaking changes; refactors proceed with rationale
+1. **Analyze** existing patterns and APIs
+2. **Propose** changes (assess breaking changes and public API impact)
+3. **Implement** with tests and documentation
 4. **Verify** with `npm run validate`
-5. **Document** with JSDoc and related markdown
 
-## Conventions
+## References
 
-See [docs/conventions/](docs/conventions/) for detailed guidelines.
-
-## Learning
-
-See [docs/learn/](docs/learn/) for a sequential guide through all project features and concepts.
+- Conventions: `docs/conventions/`
+- Learning guide: `docs/learn/`
