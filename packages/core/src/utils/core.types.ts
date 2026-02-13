@@ -65,74 +65,31 @@ export interface CostConfig {
 }
 
 /**
- * Token count and cost breakdown for a specific token type.
+ * Build options for prompt composition rendering.
  *
- * @property tokens - Number of tokens
- * @property cost - Cost in USD
- */
-export interface CostBreakdown {
-  tokens: number;
-  cost: number;
-}
-
-/**
- * Complete cost tracking information for a prompt composition.
- *
- * @property input - Input tokens and cost (always present after build)
- * @property output - Output tokens and cost (present after updateCost)
- * @property total - Total cost in USD (sum of input + output)
- * @property currency - Currency code (always "USD")
- *
- * @remarks
- * The `output` field includes thinking/reasoning tokens for models like GPT-o1.
- * Providers bill these at the same rate as regular output tokens.
+ * @property context - Optional runtime context propagated to all components
  *
  * @example
  * ```typescript
- * const prompt = composition.build(data);
- *
- * // Initial state (only input cost)
- * console.log(prompt.metadata.cost);
- * // {
- * //   input: { tokens: 245, cost: 0.000613 },
- * //   total: 0.000613,
- * //   currency: "USD"
- * // }
- *
- * // After LLM response
- * prompt.updateCost({ outputTokens: 150 });
- * console.log(prompt.metadata.cost);
- * // {
- * //   input: { tokens: 245, cost: 0.000613 },
- * //   output: { tokens: 150, cost: 0.0015 },
- * //   total: 0.002113,
- * //   currency: "USD"
- * // }
+ * const prompt = composition.build(data, {
+ *   context: { locale: "es", environment: "production" }
+ * });
  * ```
  */
-export interface CostMetadata {
-  input: CostBreakdown;
-  output?: CostBreakdown;
-  total: number;
-  currency: 'USD';
+export interface BuildOptions {
+  context?: Record<string, unknown>;
 }
 
 /**
- * Metadata about a single component's rendering and cost.
+ * Metadata about a single component's rendering.
  *
  * @property key - The semantic key of the component
- * @property tokens - Number of input tokens for this component
- * @property cost - Input cost in USD (if cost tracking enabled)
+ * @property estimatedTokens - Estimated number of input tokens for this component
  * @property optimization - Optimization statistics (if optimizer configured)
- *
- * @remarks
- * Only input costs are tracked at component level. Output costs cannot be
- * accurately attributed to individual components.
  */
 export interface ComponentMetadata {
   key: string;
-  tokens: number;
-  cost?: number;
+  estimatedTokens: number;
   optimization?: OptimizationMetadata;
 }
 
@@ -142,8 +99,7 @@ export interface ComponentMetadata {
  * @remarks
  * This is the final output of `composition.build()`. It provides:
  * - Multiple output formats (string, messages)
- * - Cost tracking with `updateCost()`
- * - Comprehensive metadata (tokens, components, costs)
+ * - Comprehensive metadata (estimated token counts and components)
  *
  * @example
  * ```typescript
@@ -154,11 +110,6 @@ export interface ComponentMetadata {
  *
  * // Use with chat APIs
  * const messages = prompt.asMessages();
- *
- * // Track costs
- * const response = await openai.chat.completions.create({ messages });
- * prompt.updateCost({ outputTokens: response.usage.completion_tokens });
- * console.log(prompt.metadata.cost.total); // Total cost in USD
  * ```
  */
 export interface UniversalPromptInstance {
@@ -183,48 +134,17 @@ export interface UniversalPromptInstance {
   asMessages(): ChatMessage[];
 
   /**
-   * Updates cost metadata with actual output token usage from LLM response.
-   *
-   * @param usage - Token usage from the LLM API response
-   * @param usage.outputTokens - Number of output tokens (includes reasoning/thinking)
-   * @returns Updated metadata object
-   *
-   * @throws Error if no cost configuration was provided to the composition
-   *
-   * @remarks
-   * For models with thinking/reasoning capabilities (GPT-o1, Gemini Thinking),
-   * the `outputTokens` should include all output tokens. Providers bill
-   * reasoning tokens at the same rate as regular output tokens.
-   *
-   * @example
-   * ```typescript
-   * const prompt = composition.build(data);
-   *
-   * // OpenAI response
-   * const response = await openai.chat.completions.create({ messages: prompt.asMessages() });
-   * prompt.updateCost({ outputTokens: response.usage.completion_tokens });
-   *
-   * // For o1 models, completion_tokens already includes reasoning
-   * const o1Response = await openai.chat.completions.create({ model: "o1-preview", ... });
-   * prompt.updateCost({ outputTokens: o1Response.usage.completion_tokens });
-   * ```
-   */
-  updateCost(usage: { outputTokens: number }): UniversalPromptInstance['metadata'];
-
-  /**
    * Metadata about the built prompt instance.
    *
    * @property id - Unique ID of the composition that generated this instance
-   * @property tokenCount - Estimated token count of the rendered prompt
+   * @property estimatedTokens - Estimated token count of the rendered prompt
    * @property inputData - The data used to build this instance
-   * @property cost - Cost tracking information (if cost config provided)
-   * @property components - Per-component metadata with tokens and costs
+   * @property components - Per-component metadata with estimated token counts
    */
   readonly metadata: {
     id: string;
-    tokenCount: number;
+    estimatedTokens: number;
     inputData: Record<string, unknown>;
-    cost?: CostMetadata;
     components: ComponentMetadata[];
   };
 }

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises';
 import { generatePreviews } from './preview-generator';
 import { logger } from '../logger/index.js';
 import { z } from 'zod';
@@ -7,14 +7,25 @@ jest.mock('node:fs/promises');
 jest.mock('../logger/index.js');
 
 const mockMkdir = mkdir as jest.MockedFunction<typeof mkdir>;
+const mockReaddir = readdir as jest.MockedFunction<typeof readdir>;
+const mockUnlink = unlink as jest.MockedFunction<typeof unlink>;
 const mockWriteFile = writeFile as jest.MockedFunction<typeof writeFile>;
 const mockLogger = logger as jest.Mocked<typeof logger>;
+
+function createFileDirent(name: string): { name: string; isFile: () => boolean } {
+  return {
+    name,
+    isFile: () => true,
+  };
+}
 
 describe('generatePreviews', () => {
   let mockRegistry: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockReaddir.mockResolvedValue([]);
+    mockUnlink.mockResolvedValue(undefined);
 
     // Create mock registry with basic structure
     mockRegistry = {
@@ -28,7 +39,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
-              metadata: { tokenCount: 10 },
+              metadata: { estimatedTokens: 10 },
             })),
           },
           fixtures: {
@@ -72,6 +83,42 @@ describe('generatePreviews', () => {
     });
   });
 
+  describe('stale file cleanup', () => {
+    it('should remove stale preview files by default', async () => {
+      mockReaddir.mockResolvedValue([
+        createFileDirent('test-comp_old-fixture.txt'),
+        createFileDirent('unrelated-file.txt'),
+      ] as any);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      expect(mockUnlink).toHaveBeenCalledTimes(1);
+      expect(mockUnlink).toHaveBeenCalledWith(expect.stringContaining('test-comp_old-fixture.txt'));
+    });
+
+    it('should not remove files when clean=false', async () => {
+      mockReaddir.mockResolvedValue([createFileDirent('test-comp_old-fixture.txt')] as any);
+
+      await generatePreviews(mockRegistry, {
+        outdir: '.promptise/builds',
+        clean: false,
+      });
+
+      expect(mockUnlink).not.toHaveBeenCalled();
+    });
+
+    it('should skip stale cleanup on fixture-filtered builds', async () => {
+      mockReaddir.mockResolvedValue([createFileDirent('test-comp_partial.txt')] as any);
+
+      await generatePreviews(mockRegistry, {
+        outdir: '.promptise/builds',
+        fixtureName: 'complete',
+      });
+
+      expect(mockUnlink).not.toHaveBeenCalled();
+    });
+  });
+
   describe('metadata generation', () => {
     it('should include metadata by default', async () => {
       await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
@@ -105,7 +152,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Required: ${data.required}`,
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {
@@ -123,6 +170,95 @@ describe('generatePreviews', () => {
       expect(content).toContain('→ not provided');
     });
 
+    it('should show estimated tokens only for complete fixtures', async () => {
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const fullContent = mockWriteFile.mock.calls[0]?.[1] as string;
+      const partialContent = mockWriteFile.mock.calls[1]?.[1] as string;
+
+      expect(fullContent).toContain('Fixture: complete');
+      expect(fullContent).toContain('Estimated Tokens: 10');
+
+      expect(partialContent).toContain('Fixture: partial');
+      expect(partialContent).not.toContain('Estimated Tokens:');
+    });
+
+    it('should include estimated input cost block for complete fixtures with pricing', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'priced-comp',
+            schema: z.object({
+              field1: z.string(),
+              field2: z.string(),
+            }),
+            build: jest.fn((data) => ({
+              asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
+              metadata: { estimatedTokens: data.field1 === '' && data.field2 === '' ? 4 : 10 },
+            })),
+          },
+          fixtures: {
+            complete: { field1: 'value1', field2: 'value2' },
+          },
+          cost: {
+            inputTokenPrice: 0.000005,
+            outputTokenPrice: 0.000015,
+            currency: 'USD',
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const content = mockWriteFile.mock.calls[0][1] as string;
+      expect(content).toContain('Estimated Input Cost:');
+      expect(content).toContain('Input Pricing: $5.00 / 1M tokens ($0.000005/token)');
+      expect(content).toContain('Static: 4 tokens / $0.000020');
+      expect(content).toContain('Dynamic: 6 tokens / $0.000030');
+      expect(content).toContain('Total: 10 tokens / $0.000050');
+      expect(content).not.toContain('Estimated Tokens: 10');
+    });
+
+    it('should not include estimated input cost block for partial fixtures even with pricing', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'priced-partial',
+            schema: z.object({
+              field1: z.string(),
+              field2: z.string(),
+            }),
+            build: jest.fn((data) => ({
+              asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
+              metadata: { estimatedTokens: 8 },
+            })),
+          },
+          fixtures: {
+            partial: { field1: 'value1' },
+          },
+          cost: {
+            inputTokenPrice: 0.000005,
+            outputTokenPrice: 0.000015,
+            currency: 'USD',
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const content = mockWriteFile.mock.calls[0][1] as string;
+      expect(content).toContain('Fixture: partial');
+      expect(content).not.toContain('Estimated Input Cost:');
+      expect(content).not.toContain('Estimated Tokens:');
+    });
+
+    it('should inject placeholders for missing required fields', async () => {
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const partialContent = mockWriteFile.mock.calls[1]?.[1] as string;
+      expect(partialContent).toContain('Field2: {{field2}}');
+    });
+
     it('should show provided optional fields', async () => {
       mockRegistry.getCompositions.mockReturnValue([
         {
@@ -134,11 +270,11 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Name: ${data.name}, Desc: ${data.description}`,
-              metadata: { tokenCount: 8 },
+              metadata: { estimatedTokens: 8 },
             })),
           },
           fixtures: {
-            full: { name: 'John', description: 'A developer' }, // optional field IS provided
+            complete: { name: 'John', description: 'A developer' }, // optional field IS provided
           },
         },
       ]);
@@ -160,7 +296,7 @@ describe('generatePreviews', () => {
             schema: z.object({}), // Empty schema - no fields
             build: jest.fn(() => ({
               asString: () => 'Static content',
-              metadata: { tokenCount: 2 },
+              metadata: { estimatedTokens: 2 },
             })),
           },
           fixtures: {
@@ -176,7 +312,7 @@ describe('generatePreviews', () => {
       expect(content).toContain('Composition ID: no-schema');
       expect(content).toContain('Fixture: empty');
       expect(content).not.toContain('Schema Fields:'); // No fields section
-      expect(content).toContain('Tokens: 2');
+      expect(content).toContain('Estimated Tokens: 2');
     });
   });
 
@@ -229,7 +365,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn(() => ({
               asString: () => `Field1: {{field1}}, Field2: {{field2}}`,
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {},
@@ -259,7 +395,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn(() => ({
               asString: () => `Name: {{name}}`,
-              metadata: { tokenCount: 3 },
+              metadata: { estimatedTokens: 3 },
             })),
           },
           fixtures: undefined,
@@ -307,8 +443,14 @@ describe('generatePreviews', () => {
 
       const stats = await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
 
-      expect(mockLogger.error).toHaveBeenCalled();
-      expect(stats.totalBuilds).toBe(0);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Using fallback preview'),
+      );
+      expect(stats.totalBuilds).toBe(1);
+      expect(mockWriteFile).toHaveBeenCalledTimes(1);
+      const content = mockWriteFile.mock.calls[0]?.[1] as string;
+      expect(content).toContain('[Promptise] Preview generated with placeholder fallback.');
+      expect(content).toContain('{{required}}');
     });
   });
 
@@ -338,7 +480,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
-              metadata: { tokenCount: 10 },
+              metadata: { estimatedTokens: 10 },
             })),
           },
           fixtures: {
@@ -364,7 +506,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Field1: ${data.field1}`,
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {
@@ -394,7 +536,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Simple: ${data.simple}, Inner: ${data.nested.inner}`,
-              metadata: { tokenCount: 12 },
+              metadata: { estimatedTokens: 12 },
             })),
           },
           fixtures: {
@@ -425,7 +567,7 @@ describe('generatePreviews', () => {
             }),
             build: jest.fn((data) => ({
               asString: () => `Name: ${data.name}, Tags: ${data.tags.join(', ')}`,
-              metadata: { tokenCount: 15 },
+              metadata: { estimatedTokens: 15 },
             })),
           },
           fixtures: {
@@ -455,7 +597,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => '',
-              metadata: { tokenCount: 0 },
+              metadata: { estimatedTokens: 0 },
             })),
           },
           fixtures: {
@@ -468,7 +610,7 @@ describe('generatePreviews', () => {
 
       expect(stats.totalBuilds).toBe(1);
       const content = mockWriteFile.mock.calls[0][1] as string;
-      expect(content).toContain('Tokens: 0');
+      expect(content).toContain('Estimated Tokens: 0');
     });
 
     it('should handle very large token count', async () => {
@@ -479,7 +621,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => 'a'.repeat(50000),
-              metadata: { tokenCount: 15000 },
+              metadata: { estimatedTokens: 15000 },
             })),
           },
           fixtures: {
@@ -492,7 +634,7 @@ describe('generatePreviews', () => {
 
       expect(stats.totalBuilds).toBe(1);
       const content = mockWriteFile.mock.calls[0][1] as string;
-      expect(content).toContain('Tokens: 15000');
+      expect(content).toContain('Estimated Tokens: 15000');
     });
 
     it('should handle empty rendered content', async () => {
@@ -503,7 +645,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => '',
-              metadata: { tokenCount: 0 },
+              metadata: { estimatedTokens: 0 },
             })),
           },
           fixtures: {
@@ -532,7 +674,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => 'test content',
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {
@@ -560,7 +702,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => 'test content',
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {
@@ -587,7 +729,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => 'content 1',
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {
@@ -600,7 +742,7 @@ describe('generatePreviews', () => {
             schema: z.object({ field: z.string() }),
             build: jest.fn(() => ({
               asString: () => 'content 2',
-              metadata: { tokenCount: 5 },
+              metadata: { estimatedTokens: 5 },
             })),
           },
           fixtures: {

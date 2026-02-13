@@ -1,12 +1,17 @@
 ---
 Composition ID: medical-diagnosis
-Fixture: basic (complete - 4/4)
+Fixture: complete (complete - 4/4)
 Schema Fields:
   ✓ role (required)
   ✓ context (required)
   ✓ task (required)
   ✓ rules (required)
-Tokens: 68
+
+Estimated Input Cost:
+  Input Pricing: $5.00 / 1M tokens ($0.000005/token)
+  Static: 35 tokens / $0.000175
+  Dynamic: 33 tokens / $0.000165
+  Total: 68 tokens / $0.000340
 ---
 <role>
 You are a general practitioner.

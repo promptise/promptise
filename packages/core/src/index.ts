@@ -9,7 +9,7 @@
 export type {
   ChatMessage,
   UniversalPromptInstance,
-  CostMetadata,
+  BuildOptions,
   ComponentMetadata,
   CostConfig,
 } from './utils/index.js';

@@ -5,9 +5,8 @@
 export type {
   ChatMessage,
   UniversalPromptInstance,
-  CostMetadata,
-  CostBreakdown,
   CostConfig,
+  BuildOptions,
   ComponentMetadata,
 } from './core.types.js';
 export { formatValidationError } from './errors/index.js';

@@ -220,6 +220,7 @@ describe('buildCommand', () => {
         fixture: 'fixture-name',
         verbose: true,
         metadata: false,
+        clean: false,
         config: 'custom.config.ts',
       });
 
@@ -228,6 +229,7 @@ describe('buildCommand', () => {
         fixture: 'fixture-name',
         verbose: true,
         metadata: false,
+        clean: false,
         config: 'custom.config.ts',
         compositionId: 'comp-id',
         fixtureName: 'fixture-name',

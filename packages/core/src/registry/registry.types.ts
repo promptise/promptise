@@ -1,4 +1,5 @@
 import { PromptComposition } from '../composition/composition.types.js';
+import type { CostConfig } from '../utils/core.types.js';
 
 /**
  * Input format for compositions in the registry.
@@ -39,6 +40,11 @@ export type CompositionInput = PromptComposition | CompositionEntry;
  *   fixtures: {
  *     basic: { role: 'doctor', task: 'diagnose symptoms' },
  *     icu: { role: 'intensivist', task: 'stabilize patient' }
+ *   },
+ *   cost: {
+ *     inputTokenPrice: 0.000005,
+ *     outputTokenPrice: 0.000015,
+ *     currency: 'USD'
  *   }
  * }
  */
@@ -65,6 +71,21 @@ export interface CompositionEntry {
    * }
    */
   fixtures?: Record<string, Record<string, unknown>>;
+
+  /**
+   * Optional token pricing override for this specific composition entry.
+   *
+   * Used by development tooling (CLI) to estimate costs from token counts.
+   * In production, rely on provider-reported usage/cost data from the LLM API.
+   *
+   * @example
+   * cost: {
+   *   inputTokenPrice: 0.000005,
+   *   outputTokenPrice: 0.000015,
+   *   currency: 'USD'
+   * }
+   */
+  cost?: CostConfig;
 }
 
 /**
@@ -96,7 +117,12 @@ export interface CompositionEntry {
  *         icu: { role: 'intensivist', task: 'stabilize critical patient' }
  *       }
  *     }
- *   ]
+ *   ],
+ *   defaultCost: {
+ *     inputTokenPrice: 0.000005,
+ *     outputTokenPrice: 0.000015,
+ *     currency: 'USD'
+ *   }
  * });
  *
  * @example
@@ -124,4 +150,21 @@ export interface PromptiseConfig {
    * The order determines the order in CLI outputs and listings.
    */
   compositions: CompositionInput[];
+
+  /**
+   * Default token pricing used for tooling cost estimation.
+   *
+   * Resolution order:
+   * 1. `CompositionEntry.cost` (entry-specific override)
+   * 2. `PromptiseConfig.defaultCost` (global fallback)
+   * 3. `undefined` (no estimation configuration)
+   *
+   * @example
+   * defaultCost: {
+   *   inputTokenPrice: 0.000005,
+   *   outputTokenPrice: 0.000015,
+   *   currency: 'USD'
+   * }
+   */
+  defaultCost?: CostConfig;
 }

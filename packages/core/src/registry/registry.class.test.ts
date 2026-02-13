@@ -18,6 +18,18 @@ jest.mock('@toon-format/toon', () => ({
 }));
 
 describe('Promptise', () => {
+  const DEFAULT_COST = {
+    inputTokenPrice: 0.000005,
+    outputTokenPrice: 0.000015,
+    currency: 'USD' as const,
+  };
+
+  const ENTRY_COST = {
+    inputTokenPrice: 0.000003,
+    outputTokenPrice: 0.000015,
+    currency: 'USD' as const,
+  };
+
   // Test components and compositions
   const userComponent = createPromptComponent({
     key: 'role',
@@ -84,6 +96,64 @@ describe('Promptise', () => {
           compositions: [{ composition: composition1 }, { composition: composition1 }],
         });
       }).toThrow('comp-1');
+    });
+
+    it('should expose defaultCost when provided', () => {
+      const registry = new Promptise({
+        compositions: [composition1],
+        defaultCost: DEFAULT_COST,
+      });
+
+      expect(registry.defaultCost).toEqual(DEFAULT_COST);
+    });
+
+    it('should keep defaultCost undefined when not provided', () => {
+      const registry = new Promptise({
+        compositions: [composition1],
+      });
+
+      expect(registry.defaultCost).toBeUndefined();
+    });
+  });
+
+  describe('Cost resolution', () => {
+    it('should apply defaultCost to direct composition entries', () => {
+      const registry = new Promptise({
+        compositions: [composition1],
+        defaultCost: DEFAULT_COST,
+      });
+
+      const entry = registry.getComposition('comp-1');
+      expect(entry?.cost).toEqual(DEFAULT_COST);
+    });
+
+    it('should apply defaultCost when entry has no cost override', () => {
+      const registry = new Promptise({
+        compositions: [{ composition: composition1, fixtures: { basic: { role: 'doctor' } } }],
+        defaultCost: DEFAULT_COST,
+      });
+
+      const entry = registry.getComposition('comp-1');
+      expect(entry?.cost).toEqual(DEFAULT_COST);
+    });
+
+    it('should prioritize entry cost over defaultCost', () => {
+      const registry = new Promptise({
+        compositions: [{ composition: composition1, cost: ENTRY_COST }],
+        defaultCost: DEFAULT_COST,
+      });
+
+      const entry = registry.getComposition('comp-1');
+      expect(entry?.cost).toEqual(ENTRY_COST);
+    });
+
+    it('should keep cost undefined when no entry cost and no defaultCost are provided', () => {
+      const registry = new Promptise({
+        compositions: [{ composition: composition1 }],
+      });
+
+      const entry = registry.getComposition('comp-1');
+      expect(entry?.cost).toBeUndefined();
     });
   });
 
@@ -213,7 +283,7 @@ describe('Promptise', () => {
     });
 
     it('should work with existing code patterns', () => {
-      // Este test simula código existente que no debe romperse
+      // This test simulates existing code paths that should not break.
       const config = {
         compositions: [
           { composition: composition1 },

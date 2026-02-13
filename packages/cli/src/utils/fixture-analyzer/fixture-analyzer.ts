@@ -44,11 +44,11 @@ export function analyzeFixtureStatus(
   const providedRequired = requiredFields.filter((key) => fixtureKeys.includes(key));
   const missingRequired = requiredFields.filter((key) => !fixtureKeys.includes(key));
 
-  let status: 'full' | 'partial' | 'placeholder';
+  let status: 'complete' | 'partial' | 'placeholder';
   let statusLabel: string;
 
   if (missingRequired.length === 0) {
-    status = 'full';
+    status = 'complete';
     statusLabel =
       requiredFields.length > 0
         ? `complete - ${requiredFields.length}/${requiredFields.length}`

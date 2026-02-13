@@ -3,7 +3,7 @@ import { analyzeFixtureStatus } from './fixture-analyzer';
 
 describe('analyzeFixtureStatus', () => {
   describe('status detection', () => {
-    it('should detect full status when all required fields are provided', () => {
+    it('should detect complete status when all required fields are provided', () => {
       const schema = z.object({
         role: z.string(),
         task: z.string(),
@@ -16,7 +16,7 @@ describe('analyzeFixtureStatus', () => {
 
       const result = analyzeFixtureStatus(schema, fixture);
 
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['role', 'task']);
       expect(result.missing).toEqual([]);
     });
@@ -71,7 +71,7 @@ describe('analyzeFixtureStatus', () => {
 
       const result = analyzeFixtureStatus(schema, fixture);
 
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['role', 'task']);
       expect(result.missing).toEqual([]);
     });
@@ -106,7 +106,7 @@ describe('analyzeFixtureStatus', () => {
 
       const result = analyzeFixtureStatus(schema, fixture);
 
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.statusLabel).toBe('complete - no required fields');
       expect(result.provided).toEqual([]);
       expect(result.missing).toEqual([]);
@@ -130,7 +130,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // nullable() does NOT make field optional - field must be present (can be null)
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.requiredFields).toEqual(['required', 'nullable']);
       expect(result.optionalFields).toEqual([]);
     });
@@ -168,7 +168,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // .default() makes field optional
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.requiredFields).toEqual(['required']);
       expect(result.optionalFields).toEqual(['withDefault']);
     });
@@ -186,7 +186,7 @@ describe('analyzeFixtureStatus', () => {
 
       const result = analyzeFixtureStatus(schema, fixture);
 
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['required']);
       expect(result.missing).toEqual([]);
     });
@@ -207,7 +207,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // null is a provided value
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['field1', 'field2']);
       expect(result.missing).toEqual([]);
     });
@@ -226,7 +226,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // undefined means field was not provided (not in object keys)
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['field1', 'field2']);
     });
   });
@@ -252,7 +252,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // Analyzer only checks top-level fields (nested is one field)
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['simple', 'nested']);
       expect(result.requiredFields).toEqual(['simple', 'nested']);
     });
@@ -292,7 +292,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // Array is treated as one field
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['name', 'tags']);
       expect(result.requiredFields).toEqual(['name', 'tags']);
     });
@@ -327,7 +327,7 @@ describe('analyzeFixtureStatus', () => {
       const result = analyzeFixtureStatus(schema, fixture);
 
       // Empty array is still a provided value
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['name', 'tags']);
     });
   });
@@ -366,7 +366,7 @@ describe('analyzeFixtureStatus', () => {
 
       const result = analyzeFixtureStatus(schema, fixture);
 
-      expect(result.status).toBe('full');
+      expect(result.status).toBe('complete');
       expect(result.provided).toEqual(['role', 'task']);
       expect(result.missing).toEqual([]);
     });

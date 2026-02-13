@@ -1,6 +1,6 @@
 import { ZodObject } from 'zod';
 import { PromptComponent } from '../component/component.types.js';
-import { UniversalPromptInstance, CostConfig } from '../utils/core.types.js';
+import { UniversalPromptInstance, BuildOptions } from '../utils/core.types.js';
 import { CompositionPattern } from './pattern/composition-pattern.types.js';
 
 /**
@@ -124,22 +124,6 @@ export interface PromptCompositionConfig {
    * @example { role: 'system', task: 'user', examples: 'assistant' }
    */
   messageRoles?: Record<string, MessageRole>;
-
-  /**
-   * Cost tracking configuration.
-   * Enables automatic cost calculation based on token usage and pricing.
-   *
-   * @example
-   * // GPT-5 pricing
-   * cost: {
-   *   inputTokenPrice: 0.000005,  // $5 / 1M tokens
-   *   outputTokenPrice: 0.000015, // $15 / 1M tokens
-   *   currency: 'USD'
-   * }
-   *
-   * Optional.
-   */
-  cost?: CostConfig;
 }
 
 /**
@@ -167,10 +151,10 @@ export interface PromptComposition extends Readonly<PromptCompositionConfig> {
    * **This is the main method for production use.**
    *
    * Validates input data, renders all components, applies wrappers,
-   * calculates token counts and costs, and returns a complete prompt instance.
+   * calculates estimated token counts, and returns a complete prompt instance.
    *
    * @param data - Input data matching the composition's schema
-   * @param context - Optional context object for cross-component data sharing
+   * @param options - Optional build options
    * @returns A UniversalPromptInstance with string and message representations
    * @throws Error with formatted validation message if data is invalid
    *
@@ -185,7 +169,7 @@ export interface PromptComposition extends Readonly<PromptCompositionConfig> {
    * });
    *
    * console.log(prompt.asString());
-   * console.log(prompt.metadata.tokenCount);
+   * console.log(prompt.metadata.estimatedTokens);
    */
-  build(data: unknown, context?: Record<string, unknown>): UniversalPromptInstance;
+  build(data: unknown, options?: BuildOptions): UniversalPromptInstance;
 }
