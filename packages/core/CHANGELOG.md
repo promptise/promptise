@@ -5,6 +5,26 @@ All notable changes to **@promptise/core** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-13
+
+### Changed
+
+- **Breaking:** `build(data, context)` ahora es `build(data, { context })`.
+- **Breaking:** `prompt.metadata.tokenCount` -> `prompt.metadata.estimatedTokens`.
+- **Breaking:** `prompt.metadata.components[].tokens` -> `prompt.metadata.components[].estimatedTokens`.
+- Cost estimation se centraliza en registry/CLI (`Promptise` + entries), no en composición runtime.
+
+### Removed
+
+- **Breaking:** `cost` en `createPromptComposition(...)`.
+- **Breaking:** `prompt.updateCost()`.
+- **Breaking:** `prompt.metadata.cost`.
+- **Breaking:** `prompt.metadata.components[].cost`.
+
+### Documentation
+
+- README y docs alineados al modelo v2 (`estimatedTokens`, build options, cost en registry/CLI).
+
 ## [1.1.1] - 2026-02-13
 
 ### Fixed

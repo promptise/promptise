@@ -1,6 +1,6 @@
 {
   "name": "promptise",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "A powerful and type-safe prompt engineering framework for TypeScript",
   "workspaces": [
