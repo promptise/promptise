@@ -37,7 +37,7 @@ const prompt = createPromptComposition({
 }).build({ role: 'analyst', task: 'review this report' });
 
 console.log(prompt.asString());
-console.log(prompt.metadata.tokenCount);
+console.log(prompt.metadata.estimatedTokens);
 ```
 
 ## Features
@@ -47,7 +47,7 @@ console.log(prompt.metadata.tokenCount);
 - Composition patterns
 - Prompt strategies
 - Registry (`Promptise`)
-- Metadata (`tokenCount`, `cost`)
+- Metadata (`estimatedTokens`)
 
 ## License
 

@@ -48,11 +48,9 @@ npm run build
 
 This generates preview files in `.promptise/builds/`:
 
-- `medical-diagnosis_basic.txt` - Full preview with all fields
-- `medical-diagnosis_icu.txt` - ICU variant
-- `code-review_security.txt` - Security focus
-- `code-review_performance.txt` - Performance focus
-- `simple-prompt_default.txt` - Shows placeholders (no fixtures)
+- `medical-diagnosis_complete.txt` - Complete fixture with all required fields
+- `code-review_partial.txt` - Partial fixture with placeholders for missing fields
+- `simple-prompt_placeholder.txt` - Auto-generated placeholder preview (no fixtures)
 
 ### Generate with verbose logging
 
@@ -75,7 +73,7 @@ npx promptise build medical-diagnosis
 ### Generate specific fixture
 
 ```bash
-npx promptise build medical-diagnosis --fixture icu
+npx promptise build medical-diagnosis --fixture complete
 ```
 
 ## Components
@@ -104,8 +102,7 @@ Medical diagnosis assistance with XML wrappers.
 
 **Fixtures:**
 
-- `basic` - General practitioner scenario
-- `icu` - Intensive care specialist scenario
+- `complete` - General practitioner scenario with all required fields
 
 ### `codeReview`
 
@@ -113,8 +110,7 @@ Code review assistance with Markdown wrappers.
 
 **Fixtures:**
 
-- `security` - Security vulnerability review
-- `performance` - Performance optimization review
+- `partial` - Security review with intentionally missing required fields
 
 ### `simplePrompt`
 
@@ -122,16 +118,23 @@ Basic prompt without fixtures (demonstrates placeholder behavior).
 
 ## Output Examples
 
-### Full fixture (medical-diagnosis_basic.txt)
+### Complete fixture (medical-diagnosis_complete.txt)
 
 ```
 ---
-Composition: medical-diagnosis
-Fixture: basic
-Status: full
-Provided: role, context, task, rules
-Missing: none
-Tokens: 127
+Composition ID: medical-diagnosis
+Fixture: complete (complete - 4/4)
+Schema Fields:
+  ✓ role (required)
+  ✓ context (required)
+  ✓ task (required)
+  ✓ rules (required)
+
+Estimated Input Cost:
+  Input Pricing: $5.00 / 1M tokens ($0.000005/token)
+  Static: 35 tokens / $0.000175
+  Dynamic: 33 tokens / $0.000165
+  Total: 68 tokens / $0.000340
 ---
 
 <role>
@@ -151,16 +154,15 @@ Rules:
 </rules>
 ```
 
-### Placeholder (simple-prompt_default.txt)
+### Placeholder (simple-prompt_placeholder.txt)
 
 ```
 ---
-Composition: simple-prompt
-Fixture: default
-Status: placeholder
-Provided: none
-Missing: role, task
-Tokens: 15
+Composition ID: simple-prompt
+Fixture: placeholder (empty - 0/2)
+Schema Fields:
+  ✗ role (required) → placeholder
+  ✗ task (required) → placeholder
 ---
 
 You are a {{role}}.
@@ -175,8 +177,7 @@ Task: {{task}}
 4. **Run the CLI** - Generate previews and inspect the output files
 5. **Modify and experiment** - Try adding new components, compositions, or fixtures
 
-## Next Steps
+## Resources
 
-- Check out the [Promptise documentation](../../docs/learn) for advanced features
-- Try the [pattern example](../patterns) to learn about structural validation
-- Explore [strategy example](../strategies) for multi-turn prompts (coming soon)
+- Explore the [Promptise documentation](../../docs/learn) for guides and API usage.
+- Try the [pattern example](../patterns) to learn structural validation.

@@ -4,9 +4,8 @@ import { PromptComponent } from '../component/component.types.js';
 import {
   UniversalPromptInstance,
   ChatMessage,
-  CostMetadata,
   ComponentMetadata,
-  CostConfig,
+  BuildOptions,
   OptimizationMetadata,
 } from '../utils/core.types.js';
 import { CompositionPattern } from './pattern/composition-pattern.types.js';
@@ -163,7 +162,7 @@ function _inferSchema(components: PromptComponent<any>[]): ZodObject<any> {
  * Creates a composition that combines multiple prompt components into a cohesive prompt structure.
  *
  * This is the main factory function for assembling structured prompts with validation,
- * schema inference, cost tracking, and pattern enforcement capabilities.
+ * schema inference, token metadata, and pattern enforcement capabilities.
  *
  * @param config - Configuration object for the composition
  * @param config.id - Unique identifier for the composition (alphanumeric, underscores, hyphens; must start with letter/underscore)
@@ -173,7 +172,6 @@ function _inferSchema(components: PromptComponent<any>[]): ZodObject<any> {
  * @param config.description - Optional description of the composition's purpose
  * @param config.componentWrapper - Wrapping style for components: "xml", "markdown", "brackets", "none", or custom function (default: "none")
  * @param config.messageRoles - Optional mapping of component keys to message roles for chat APIs
- * @param config.cost - Optional cost configuration for input/output/reasoning token pricing
  *
  * @returns A PromptComposition object with schema, build method, and metadata access
  *
@@ -202,7 +200,6 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
     description,
     componentWrapper = 'none',
     messageRoles,
-    cost,
   } = config;
 
   // Validate composition ID format
@@ -261,7 +258,8 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
       const wrappedContent = _applyWrapper(renderResult.content, component.key, componentWrapper);
       return {
         key: component.key,
-        rawContent: renderResult.content, // Texto puro sin wrapper para validación
+        // Raw component content before wrapper application, used for validation checks.
+        rawContent: renderResult.content,
         renderedText: wrappedContent,
         optimizationMetadata: renderResult.metadata.optimization,
       };
@@ -277,43 +275,29 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
       renderedText: string;
       optimizationMetadata?: OptimizationMetadata;
     }[],
-    costConfig: CostConfig | undefined,
   ): {
     componentsMetadata: ComponentMetadata[];
-    totalTokens: number;
-    costMetadata?: CostMetadata;
+    totalEstimatedTokens: number;
   } => {
     const componentsMetadata: ComponentMetadata[] = renderedParts.map((part) => {
-      const tokens = countTokens(part.renderedText);
+      const estimatedTokens = countTokens(part.renderedText);
       const metadata: ComponentMetadata = {
         key: part.key,
-        tokens,
+        estimatedTokens,
       };
 
       if (part.optimizationMetadata) {
         metadata.optimization = part.optimizationMetadata;
       }
 
-      if (costConfig) {
-        metadata.cost = tokens * costConfig.inputTokenPrice;
-      }
-
       return metadata;
     });
 
-    const totalTokens = componentsMetadata.reduce((sum, m) => sum + m.tokens, 0);
-
-    let costMetadata: CostMetadata | undefined = undefined;
-    if (costConfig) {
-      const inputCost = totalTokens * costConfig.inputTokenPrice;
-      costMetadata = {
-        input: { tokens: totalTokens, cost: inputCost },
-        total: inputCost,
-        currency: 'USD',
-      };
-    }
-
-    return { componentsMetadata, totalTokens, costMetadata };
+    const totalEstimatedTokens = componentsMetadata.reduce(
+      (sum, metadata) => sum + metadata.estimatedTokens,
+      0,
+    );
+    return { componentsMetadata, totalEstimatedTokens };
   };
 
   // --- Returned Object Implementation ---
@@ -324,19 +308,15 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
     description,
     componentWrapper,
     messageRoles,
-    cost,
 
     schema: finalSchema,
 
-    build(data: unknown, context?: Record<string, unknown>): UniversalPromptInstance {
+    build(data: unknown, options?: BuildOptions): UniversalPromptInstance {
+      const context = options?.context;
       const { validatedData, parts: renderedParts } = renderComponents(data, context);
 
       // Calculate initial metadata for all components (needed for validation)
-      const { componentsMetadata, totalTokens, costMetadata } = _calculateInitialMetadata(
-        renderedParts,
-        cost,
-      );
-      let mutableCostMetadata = costMetadata;
+      const { componentsMetadata, totalEstimatedTokens } = _calculateInitialMetadata(renderedParts);
 
       // Validate component content if pattern with validation exists
       if (validatedPattern) {
@@ -368,9 +348,12 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
         });
 
         // Validate global token limit if pattern defines maxTokens
-        if (validatedPattern.maxTokens !== undefined && totalTokens > validatedPattern.maxTokens) {
+        if (
+          validatedPattern.maxTokens !== undefined &&
+          totalEstimatedTokens > validatedPattern.maxTokens
+        ) {
           throw new Error(
-            `[Promptise] Pattern "${validatedPattern.id}" token limit exceeded: ${totalTokens} > ${validatedPattern.maxTokens}`,
+            `[Promptise] Pattern "${validatedPattern.id}" token limit exceeded: ${totalEstimatedTokens} > ${validatedPattern.maxTokens}`,
           );
         }
       }
@@ -399,42 +382,10 @@ export function createPromptComposition(config: PromptCompositionConfig): Prompt
         asString: () => fullPromptText,
         asMessages: getMessages,
 
-        updateCost(usage: { outputTokens: number }) {
-          if (!mutableCostMetadata) {
-            throw new Error(
-              `[Promptise] Cannot update cost: no cost config provided in composition "${id}"`,
-            );
-          }
-
-          const updated: CostMetadata = { ...mutableCostMetadata };
-
-          // Update output cost (includes reasoning/thinking tokens)
-          if (!cost?.outputTokenPrice) {
-            console.warn(
-              `[Promptise] Output tokens provided but no outputTokenPrice configured for composition "${id}"`,
-            );
-          } else {
-            updated.output = {
-              tokens: usage.outputTokens,
-              cost: usage.outputTokens * cost.outputTokenPrice,
-            };
-          }
-
-          // Recalculate total cost
-          updated.total = updated.input.cost + (updated.output?.cost ?? 0);
-
-          // Update metadata reference
-          mutableCostMetadata = updated;
-          promptInstance.metadata.cost = updated;
-
-          return promptInstance.metadata;
-        },
-
         metadata: {
           id: id,
-          tokenCount: totalTokens,
+          estimatedTokens: totalEstimatedTokens,
           inputData: validatedData,
-          cost: mutableCostMetadata,
           components: componentsMetadata,
         },
       };

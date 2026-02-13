@@ -10,11 +10,17 @@ import { codeReview } from './src/compositions/code-review.ts';
 import { simplePrompt } from './src/compositions/simple-prompt.ts';
 
 export default new Promptise({
+  defaultCost: {
+    inputTokenPrice: 0.000005,
+    outputTokenPrice: 0.000015,
+    currency: 'USD',
+  },
   compositions: [
+    // CASE 1: Complete fixture (all required fields provided)
     {
       composition: medicalDiagnosis,
       fixtures: {
-        basic: {
+        complete: {
           role: 'general practitioner',
           context: 'Patient presenting with fever and headache',
           task: 'Provide differential diagnosis',
@@ -24,52 +30,20 @@ export default new Promptise({
             'Recommend when to seek emergency care',
           ],
         },
-        icu: {
-          role: 'intensive care specialist',
-          context: 'ICU patient with septic shock, requiring vasopressor support',
-          task: 'Optimize hemodynamic management and source control',
-          rules: [
-            'Follow surviving sepsis campaign guidelines',
-            'Consider ARDS protective ventilation',
-            'Monitor lactate clearance',
-            'Initiate early goal-directed therapy',
-          ],
-        },
       },
     },
+    // CASE 2: Partial fixture (some required fields missing)
     {
       composition: codeReview,
       fixtures: {
-        security: {
+        partial: {
           role: 'senior security engineer',
           task: 'Review code for security vulnerabilities',
-          rules: [
-            'Check for SQL injection risks',
-            'Verify input sanitization',
-            'Look for authentication bypasses',
-            'Identify sensitive data exposure',
-          ],
-        },
-        performance: {
-          role: 'performance optimization expert',
-          task: 'Analyze code for performance bottlenecks',
-          rules: [
-            'Identify N+1 query problems',
-            'Check for unnecessary loops',
-            'Look for memory leaks',
-            'Suggest caching opportunities',
-          ],
+          // Missing `rules` on purpose to demonstrate partial fixtures.
         },
       },
     },
-    {
-      composition: simplePrompt,
-      fixtures: {
-        example: {
-          role: 'helpful assistant',
-          task: 'Answer the user question clearly and concisely',
-        },
-      },
-    },
+    // CASE 3: Placeholder (no fixtures - CLI generates placeholder fixture automatically)
+    simplePrompt,
   ],
 });

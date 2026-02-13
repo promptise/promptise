@@ -23,6 +23,7 @@ program
   .option('-o, --outdir <path>', 'Output directory', '.promptise/builds')
   .option('-c, --config <path>', 'Path to config file', 'promptise.config.ts')
   .option('--no-metadata', 'Generate clean files without metadata headers')
+  .option('--no-clean', 'Keep existing preview files (disable stale cleanup)')
   .option('-v, --verbose', 'Enable verbose logging')
   .action(async (compositionId: string | undefined, options: BuildOptions) => {
     await buildCommand(compositionId, options);

@@ -3,13 +3,6 @@ import { createPromptComponent } from '../component';
 import { createPromptComposition } from './composition.factory';
 import { createCompositionPattern } from './pattern/composition-pattern.factory';
 
-// Example pricing config for tests
-const EXAMPLE_PRICING = {
-  inputTokenPrice: 0.00001, // $10 / 1M tokens
-  outputTokenPrice: 0.00003, // $30 / 1M tokens
-  currency: 'USD' as const,
-};
-
 // Mock TOON library
 jest.mock('@toon-format/toon', () => ({
   encode: (value: unknown) => {
@@ -54,7 +47,7 @@ describe('createPromptComposition', () => {
 
       const prompt = composition.build({});
       expect(prompt.asString()).toBe('');
-      expect(prompt.metadata.tokenCount).toBe(0);
+      expect(prompt.metadata.estimatedTokens).toBe(0);
       expect(prompt.metadata.components).toHaveLength(0);
     });
 
@@ -120,55 +113,6 @@ describe('createPromptComposition', () => {
       expect(messages[0].content).toContain('assistant');
     });
 
-    it('should handle updateCost called multiple times', () => {
-      const composition = createPromptComposition({
-        id: 'multiple-updates',
-        components: [userComponent, taskComponent],
-        cost: EXAMPLE_PRICING,
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      const initialCost = prompt.metadata.cost?.total ?? 0;
-
-      // First update
-      prompt.updateCost({ outputTokens: 500 });
-      const firstUpdateCost = prompt.metadata.cost?.total ?? 0;
-      expect(firstUpdateCost).toBeGreaterThan(initialCost);
-      expect(prompt.metadata.cost?.output?.tokens).toBe(500);
-
-      // Second update should replace the first
-      prompt.updateCost({ outputTokens: 1000 });
-      const secondUpdateCost = prompt.metadata.cost?.total ?? 0;
-      expect(secondUpdateCost).toBeGreaterThan(firstUpdateCost);
-      expect(prompt.metadata.cost?.output?.tokens).toBe(1000); // Replaced
-
-      // Third update includes reasoning/thinking tokens as output
-      prompt.updateCost({ outputTokens: 2800 }); // 800 regular + 2000 reasoning
-      expect(prompt.metadata.cost?.output?.tokens).toBe(2800);
-    });
-
-    it('should handle updateCost with 0 tokens', () => {
-      const composition = createPromptComposition({
-        id: 'zero-tokens-update',
-        components: [userComponent],
-        cost: EXAMPLE_PRICING,
-      });
-
-      const prompt = composition.build({ role: 'assistant' });
-      const initialCost = prompt.metadata.cost?.total ?? 0;
-
-      // Update with 0 tokens
-      prompt.updateCost({ outputTokens: 0 });
-
-      expect(prompt.metadata.cost?.output?.tokens).toBe(0);
-      expect(prompt.metadata.cost?.output?.cost).toBe(0);
-      expect(prompt.metadata.cost?.total).toBe(initialCost); // Should remain same
-    });
-
     it('should handle empty messageRoles object', () => {
       const composition = createPromptComposition({
         id: 'empty-message-roles',
@@ -207,7 +151,7 @@ describe('createPromptComposition', () => {
       // Metadata should still track empty component
       expect(prompt.metadata.components).toHaveLength(2);
       expect(prompt.metadata.components[0].key).toBe('empty');
-      expect(prompt.metadata.components[0].tokens).toBe(0);
+      expect(prompt.metadata.components[0].estimatedTokens).toBe(0);
     });
 
     it('should handle single component without separator', () => {
@@ -309,7 +253,7 @@ describe('createPromptComposition', () => {
     expect(prompt.asString()).toContain('You are a assistant');
     expect(prompt.asString()).toContain('Task: help users');
     expect(prompt.metadata.id).toBe('build-test');
-    expect(prompt.metadata.tokenCount).toBeGreaterThan(0);
+    expect(prompt.metadata.estimatedTokens).toBeGreaterThan(0);
   });
 
   it('should render components with default separator', () => {
@@ -799,7 +743,7 @@ describe('createPromptComposition', () => {
       components: [contextComponent],
     });
 
-    const prompt = composition.build({}, { name: 'World' });
+    const prompt = composition.build({}, { context: { name: 'World' } });
     expect(prompt.asString()).toBe('Hello World');
   });
 
@@ -1108,187 +1052,6 @@ describe('createPromptComposition', () => {
       expect(() => {
         composition.build({});
       }).toThrow(/keyword/);
-    });
-  });
-
-  // ============================================================================
-  // Cost Tracking Tests
-  // ============================================================================
-
-  describe('Cost tracking', () => {
-    it('should calculate input cost only when cost config provided', () => {
-      const composition = createPromptComposition({
-        id: 'cost-input-only',
-        components: [userComponent, taskComponent],
-        cost: {
-          inputTokenPrice: 0.00001, // $10 / 1M tokens
-          currency: 'USD',
-        },
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      expect(prompt.metadata.cost).toBeDefined();
-      expect(prompt.metadata.cost?.input.tokens).toBeGreaterThan(0);
-      expect(prompt.metadata.cost?.input.cost).toBeGreaterThan(0);
-      expect(prompt.metadata.cost?.total).toBe(prompt.metadata.cost?.input.cost);
-      expect(prompt.metadata.cost?.currency).toBe('USD');
-      expect(prompt.metadata.cost?.output).toBeUndefined();
-    });
-
-    it('should not include cost metadata when no cost config provided', () => {
-      const composition = createPromptComposition({
-        id: 'no-cost',
-        components: [userComponent, taskComponent],
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      expect(prompt.metadata.cost).toBeUndefined();
-    });
-
-    it('should calculate per-component cost breakdown', () => {
-      const composition = createPromptComposition({
-        id: 'component-costs',
-        components: [userComponent, taskComponent],
-        cost: EXAMPLE_PRICING,
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      expect(prompt.metadata.components).toHaveLength(2);
-      expect(prompt.metadata.components[0].cost).toBeDefined();
-      expect(prompt.metadata.components[0].cost).toBeGreaterThan(0);
-      expect(prompt.metadata.components[0].tokens).toBeGreaterThan(0);
-      expect(prompt.metadata.components[1].cost).toBeDefined();
-    });
-
-    it('should update cost with output tokens', () => {
-      const composition = createPromptComposition({
-        id: 'update-cost',
-        components: [userComponent, taskComponent],
-        cost: EXAMPLE_PRICING,
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      const initialCost = prompt.metadata.cost?.total ?? 0;
-      expect(prompt.metadata.cost?.output).toBeUndefined();
-
-      // Simulate LLM response with output tokens
-      prompt.updateCost({ outputTokens: 1000 });
-
-      expect(prompt.metadata.cost?.output?.tokens).toBe(1000);
-      expect(prompt.metadata.cost?.output?.cost).toBeGreaterThan(0);
-      expect(prompt.metadata.cost?.total).toBeGreaterThan(initialCost);
-    });
-
-    it('should update cost with reasoning/thinking tokens (e.g., o1 models)', () => {
-      const composition = createPromptComposition({
-        id: 'reasoning-cost',
-        components: [userComponent, taskComponent],
-        cost: {
-          inputTokenPrice: 0.000015, // $15 / 1M
-          outputTokenPrice: 0.00006, // $60 / 1M (includes reasoning)
-          currency: 'USD',
-        },
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'solve this problem',
-      });
-
-      // Simulate o1 response: regular output (500) + reasoning (2000) = 2500 total
-      prompt.updateCost({ outputTokens: 2500 });
-
-      expect(prompt.metadata.cost?.output?.tokens).toBe(2500);
-      expect(prompt.metadata.cost?.output?.cost).toBeCloseTo(0.15, 5); // 2500 * 0.00006
-      expect(prompt.metadata.cost?.total).toBeCloseTo(
-        (prompt.metadata.cost?.input.cost ?? 0) + 0.15,
-        5,
-      );
-    });
-
-    it('should not distribute output costs to components', () => {
-      const composition = createPromptComposition({
-        id: 'component-update',
-        components: [userComponent, taskComponent],
-        cost: EXAMPLE_PRICING,
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      const initialComponentCosts = prompt.metadata.components.map((c) => c.cost);
-
-      prompt.updateCost({ outputTokens: 1000 });
-
-      // Component costs should NOT change after updateCost
-      // Only composition-level cost is updated with output/reasoning
-      expect(prompt.metadata.components[0].cost).toBe(initialComponentCosts[0]);
-      expect(prompt.metadata.components[1].cost).toBe(initialComponentCosts[1]);
-
-      // Composition-level cost should have output
-      expect(prompt.metadata.cost?.output?.tokens).toBe(1000);
-      expect(prompt.metadata.cost?.output?.cost).toBeGreaterThan(0);
-    });
-
-    it('should throw error when updateCost called without cost config', () => {
-      const composition = createPromptComposition({
-        id: 'no-cost-config',
-        components: [userComponent, taskComponent],
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      expect(() => {
-        prompt.updateCost({ outputTokens: 1000 });
-      }).toThrow('Cannot update cost: no cost config provided');
-    });
-
-    it('should warn when output tokens provided but no outputTokenPrice', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const composition = createPromptComposition({
-        id: 'missing-output-price',
-        components: [userComponent, taskComponent],
-        cost: {
-          inputTokenPrice: 0.00001,
-          currency: 'USD',
-          // No outputTokenPrice
-        },
-      });
-
-      const prompt = composition.build({
-        role: 'assistant',
-        task: 'help users',
-      });
-
-      prompt.updateCost({ outputTokens: 1000 });
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Output tokens provided but no outputTokenPrice configured'),
-      );
-
-      consoleWarnSpy.mockRestore();
     });
   });
 

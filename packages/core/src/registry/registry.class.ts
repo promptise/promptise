@@ -1,4 +1,5 @@
 import { PromptiseConfig, CompositionEntry, CompositionInput } from './registry.types.js';
+import type { CostConfig } from '../utils/core.types.js';
 
 /**
  * Central registry for prompt compositions and their fixture data.
@@ -6,6 +7,7 @@ import { PromptiseConfig, CompositionEntry, CompositionInput } from './registry.
  * Promptise centralizes all compositions and fixtures in your project:
  * - Unified access to all registered compositions
  * - Fixture data for CLI preview generation
+ * - Optional cost estimation defaults for tooling
  * - Single source of truth for your prompt catalog
  * - Integration point for tooling (CLI, documentation generators, etc.)
  *
@@ -59,6 +61,12 @@ export class Promptise {
   private readonly _compositions: CompositionEntry[];
 
   /**
+   * Default token pricing for tooling estimation.
+   * Resolution fallback when an entry does not define `cost`.
+   */
+  readonly defaultCost?: CostConfig;
+
+  /**
    * Creates a new Promptise registry instance.
    *
    * Accepts compositions in two formats:
@@ -87,6 +95,7 @@ export class Promptise {
    * });
    */
   constructor(config: PromptiseConfig) {
+    this.defaultCost = config.defaultCost;
     const normalizedEntries = this.normalizeEntries(config.compositions);
     this.validateUniqueIds(normalizedEntries);
     this._compositions = normalizedEntries;
@@ -179,8 +188,13 @@ export class Promptise {
    * Normalizes composition inputs to CompositionEntry format.
    *
    * Accepts:
-   * - PromptComposition: Wraps in `{ composition, fixtures: undefined }`
-   * - CompositionEntry: Returns as-is
+   * - PromptComposition: Wraps in `{ composition, fixtures: undefined, cost: defaultCost }`
+   * - CompositionEntry: Returns normalized with resolved `cost`
+   *
+   * Cost resolution order:
+   * 1. Entry-level `cost`
+   * 2. Registry `defaultCost`
+   * 3. `undefined`
    *
    * @param inputs - Array of compositions in any accepted format
    * @returns Normalized array of CompositionEntry objects
@@ -189,13 +203,16 @@ export class Promptise {
    */
   private normalizeEntries(inputs: CompositionInput[]): CompositionEntry[] {
     return inputs.map((input) => {
-      if (this.isCompositionEntry(input)) {
-        return input;
-      }
+      const entry: CompositionEntry = this.isCompositionEntry(input)
+        ? input
+        : {
+            composition: input,
+            fixtures: undefined,
+          };
 
       return {
-        composition: input,
-        fixtures: undefined,
+        ...entry,
+        cost: entry.cost ?? this.defaultCost ?? undefined,
       };
     });
   }

@@ -30,6 +30,12 @@ export interface BuildOptions {
   metadata?: boolean;
 
   /**
+   * Remove stale preview files before generating.
+   * @default true
+   */
+  clean?: boolean;
+
+  /**
    * Enable verbose logging.
    */
   verbose?: boolean;
@@ -53,7 +59,7 @@ export interface BuildStats {
 /**
  * Status of a fixture.
  */
-export type FixtureStatus = 'full' | 'partial' | 'placeholder';
+export type FixtureStatus = 'complete' | 'partial' | 'placeholder';
 
 /**
  * Analysis result for a fixture.
@@ -65,7 +71,7 @@ export interface FixtureAnalysis {
   status: FixtureStatus;
 
   /**
-   * Human-readable status description (e.g., "full - 4/4 required").
+   * Human-readable status description (e.g., "complete - 4/4 required").
    */
   statusLabel: string;
 

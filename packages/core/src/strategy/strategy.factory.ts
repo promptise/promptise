@@ -210,7 +210,7 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
 
     const currentComposition = steps[currentIndex];
     if (!currentComposition) return null;
-    return currentComposition.build(data, context);
+    return currentComposition.build(data, { context });
   }
 
   function next(data: unknown, context?: Record<string, unknown>): UniversalPromptInstance | null {
@@ -239,7 +239,7 @@ export function createPromptStrategy(config: PromptStrategyConfig): PromptStrate
     // Build the new current step
     const nextComposition = steps[currentIndex];
     if (!nextComposition) return null;
-    return nextComposition.build(data, context);
+    return nextComposition.build(data, { context });
   }
 
   function reset(): void {

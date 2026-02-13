@@ -19,22 +19,6 @@ Promptise brings **component-based architecture** from UI frameworks (Angular, R
 
 Build prompts like you build UIs—from small, reusable, testable components. Inspired by component-based frameworks (Angular, React, Vue), Promptise brings the same engineering rigor to prompt design.
 
-```typescript
-// Define once, reuse everywhere
-const roleComponent = createPromptComponent({
-  /* ... */
-});
-
-// Compose into different prompts
-const medicalPrompt = createPromptComposition({
-  components: [roleComponent, medicalRulesComp, taskComp],
-});
-
-const legalPrompt = createPromptComposition({
-  components: [roleComponent, legalGuidelinesComp, taskComp],
-});
-```
-
 ### **Type-Safe by Design**
 
 Powered by Zod and TypeScript. Catch errors at compile-time, not runtime. Get intelligent IDE autocomplete for your entire prompt structure.
@@ -45,7 +29,7 @@ Works with OpenAI, Anthropic, Mastra AI, LangChain, or any LLM provider. Your pr
 
 ### **Production Ready**
 
-Built-in content validation, token counting, multi-turn strategies, and compliance checks. Trusted for regulated industries like healthcare and finance.
+Built-in content validation, estimated token metadata, multi-turn strategies, and compliance checks. Trusted for regulated industries like healthcare and finance.
 
 ---
 
@@ -53,7 +37,7 @@ Built-in content validation, token counting, multi-turn strategies, and complian
 
 Promptise is a monorepo with two packages:
 
-### **@promptise/core**
+### **[@promptise/core](https://www.npmjs.com/package/@promptise/core)**
 
 The main framework for building type-safe, reusable prompts.
 
@@ -63,7 +47,7 @@ npm install @promptise/core
 
 **Use in production:** Components, Compositions, Patterns, Strategies, Registry.
 
-### **@promptise/cli**
+### **[@promptise/cli](https://www.npmjs.com/package/@promptise/cli)**
 
 CLI for generating preview files from your prompts.
 
@@ -72,8 +56,6 @@ npm install -D @promptise/cli
 ```
 
 **Developer tool for:** Preview generation, fixture testing, documentation.
-
-See the CLI documentation for more details.
 
 ---
 
@@ -115,13 +97,13 @@ console.log(prompt.asString());
 // Your task: Analyze this dataset
 ```
 
-> **How it works:** The composition automatically merges schemas from all components. Each field in your input object is validated against its component's schema and passed to the corresponding template.
-
 ```typescript
 // Use with any LLM
 const messages = prompt.asMessages(); // For chat models
 await openai.chat.completions.create({ model: 'gpt-4', messages });
 ```
+
+How it works: The composition automatically merges schemas from all components. Each field in your input object is validated against its component's schema and passed to the corresponding template.
 
 ---
 
@@ -151,22 +133,22 @@ const result = component.render({ name: 'Alice', time: 'morning' });
 console.log(result.content); // "Good morning, Alice!"
 ```
 
-> **Note:** Function templates receive a context object with `input` (your validated data), `context` (optional runtime context), and `optimized` (when optimizer is enabled).
-
 **Features:**
 
 - ✅ String templates with `{{variable}}` interpolation
 - ✅ Function templates for dynamic logic
 - ✅ Static components (no input schema)
 - ✅ Intrinsic content validation (opt-in)
-- ✅ Native cost tracking with token counting
+- ✅ Native estimated token metadata
 - ✅ Zod validation with detailed errors
+
+Note: Function templates receive a context object with `input` (your validated data), `context` (optional runtime context), and `optimized` (when optimizer is enabled).
 
 ---
 
 ### 2. Compositions
 
-**Orchestrate multiple components into complete prompts with automatic cost tracking.**
+**Orchestrate multiple components into complete prompts with rich estimated token metadata.**
 
 ```typescript
 const composition = createPromptComposition({
@@ -178,12 +160,6 @@ const composition = createPromptComposition({
     // Optional: multi-message chat
     role: 'system',
     task: 'user',
-  },
-  cost: {
-    // Optional: enable cost tracking (GPT-5 pricing)
-    inputTokenPrice: 0.000005, // $5 / 1M input tokens
-    outputTokenPrice: 0.000015, // $15 / 1M output tokens
-    currency: 'USD',
   },
 });
 
@@ -203,14 +179,13 @@ console.log(prompt.asString());
 // Analyze this patient data
 // </task>
 
-// Automatic token counting and cost calculation
-console.log(prompt.metadata.tokenCount); // Total input tokens
-console.log(prompt.metadata.cost.input.cost); // Input cost in USD
+// Automatic estimated token metadata
+console.log(prompt.metadata.estimatedTokens); // Total estimated input tokens
 console.log(prompt.metadata.components); // Per-component breakdown
 
-// After LLM response
-prompt.updateCost({ outputTokens: 150 });
-console.log(prompt.metadata.cost.total); // Total cost (input + output)
+// Optional external estimation
+const inputCostEstimate = prompt.metadata.estimatedTokens * 0.000005;
+console.log(`Estimated input cost: $${inputCostEstimate.toFixed(6)}`);
 
 // messageRoles maps component keys to chat message roles
 const messages = prompt.asMessages();
@@ -227,7 +202,7 @@ const messages = prompt.asMessages();
 - ✅ Context propagation
 - ✅ Multiple output formats (string, messages)
 - ✅ Component wrappers (XML, Markdown, Brackets)
-- ✅ Built-in cost tracking with token counting
+- ✅ Built-in estimated token metadata
 - ✅ Token optimization with TOON (30-60% reduction)
 
 ---
@@ -349,16 +324,26 @@ export default new Promptise({
 
 // Or with fixtures for CLI preview generation
 export default new Promptise({
+  defaultCost: {
+    inputTokenPrice: 0.000005,
+    outputTokenPrice: 0.000015,
+    currency: 'USD',
+  },
   compositions: [
     {
       composition: medicalDiagnosis,
       fixtures: {
         // Test data for CLI preview generation
-        basic: { role: 'doctor', task: 'diagnose symptoms' },
-        icu: { role: 'intensivist', task: 'stabilize patient' },
+        complete: { role: 'doctor', task: 'diagnose symptoms' },
       },
     },
-    codeReview, // Mix formats as needed
+    {
+      composition: codeReview,
+      fixtures: {
+        partial: { role: 'senior reviewer' },
+      },
+    },
+    simplePrompt, // Mix formats as needed
   ],
 });
 
@@ -423,7 +408,7 @@ users[3]{id,name,role}:
 - ✅ 30-60% token reduction for arrays of objects
 - ✅ Automatic detection of optimizable data
 - ✅ Partnership with [TOON Format](https://github.com/toon-format/toon)
-- ✅ Native integration with cost tracking
+- ✅ Native integration with token efficiency analysis
 
 ---
 
@@ -465,7 +450,7 @@ const completion = await openai.chat.completions.create({
 
 ---
 
-## �️ CLI Development Tools
+## 🛠️ CLI Development Tools
 
 ### Preview Generation
 
@@ -480,17 +465,28 @@ npm install -D @promptise/cli
 
 ```typescript
 import { Promptise } from '@promptise/core';
-import { medicalDiagnosis, codeReview } from './prompts';
+import { medicalDiagnosis, codeReview, simplePrompt } from './prompts';
 
 export default new Promptise({
+  defaultCost: {
+    inputTokenPrice: 0.000005,
+    outputTokenPrice: 0.000015,
+    currency: 'USD',
+  },
   compositions: [
     {
       composition: medicalDiagnosis,
       fixtures: {
-        basic: { role: 'doctor', task: 'diagnose symptoms' },
-        icu: { role: 'intensivist', task: 'stabilize patient' },
+        complete: { role: 'doctor', task: 'diagnose symptoms' },
       },
     },
+    {
+      composition: codeReview,
+      fixtures: {
+        partial: { role: 'senior reviewer' },
+      },
+    },
+    simplePrompt,
   ],
 });
 ```
@@ -499,22 +495,25 @@ export default new Promptise({
 
 ```bash
 npx promptise build
-# ✓ Generated 2 previews in .promptise/builds
+# ✓ Generated 3 previews in .promptise/builds
 ```
 
 **Output files:**
 
 ```
 .promptise/builds/
-  medical-diagnosis_basic.txt
-  medical-diagnosis_icu.txt
+  medical-diagnosis_complete.txt
+  code-review_partial.txt
+  simple-prompt_placeholder.txt
 ```
 
 **CLI Features:**
 
 - ✅ Preview generation from fixtures
-- ✅ Fixture completeness analysis (full/partial/placeholder)
-- ✅ Token counting in metadata
+- ✅ Fixture completeness analysis (complete/partial/placeholder)
+- ✅ `Estimated Input Cost` block for complete fixtures when pricing config is available
+- ✅ Token-only metadata fallback when pricing config is not available
+- ✅ Automatic stale file cleanup (disable with `--no-clean`)
 - ✅ Clean output mode for copy-paste
 - ✅ Monorepo support with smart path resolution
 - ✅ Custom output directories
@@ -531,7 +530,7 @@ See the CLI README for complete documentation.
 
 ---
 
-## �🛡️ Type Safety & Validation
+## 🛡️ Type Safety & Validation
 
 All validation powered by Zod with enhanced error messages:
 
