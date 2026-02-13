@@ -5,6 +5,25 @@ All notable changes to **@promptise/cli** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-13
+
+### Changed
+
+- **Breaking:** fixture status `full` -> `complete`.
+- **Breaking:** `Estimated Tokens` se muestra solo en fixtures `complete`.
+- **Breaking:** `Estimated Input Cost` se muestra solo en fixtures `complete`.
+- Mensaje placeholder actualizado: `No fields provided`.
+- Dependencia de core alineada a `@promptise/core@^2.0.0`.
+
+### Added
+
+- Limpieza de previews stale por defecto antes de build.
+- Nuevo opt-out: `--no-clean`.
+
+### Documentation
+
+- README y docs de learn alineados al comportamiento actual de previews y metadata.
+
 ## [1.0.0] - 2026-02-10
 
 ### Added
