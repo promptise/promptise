@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Breaking:** `build(data, context)` ahora es `build(data, { context })`.
+- **Breaking:** `build(data, context)` is now `build(data, { context })`.
 - **Breaking:** `prompt.metadata.tokenCount` -> `prompt.metadata.estimatedTokens`.
 - **Breaking:** `prompt.metadata.components[].tokens` -> `prompt.metadata.components[].estimatedTokens`.
-- Cost estimation se centraliza en registry/CLI (`Promptise` + entries), no en composición runtime.
+- Cost estimation is centralized in registry/CLI (`Promptise` + entries), not in composition runtime.
 
 ### Removed
 
@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- README y docs alineados al modelo v2 (`estimatedTokens`, build options, cost en registry/CLI).
+- README and docs aligned with the v2 model (`estimatedTokens`, build options, cost in registry/CLI).
 
 ## [1.1.1] - 2026-02-13
 

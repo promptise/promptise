@@ -5,23 +5,43 @@ All notable changes to **@promptise/cli** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-02-18
+
+### Changed
+
+- Detailed logging is now the default behavior for `promptise build`.
+- Updated config log flow:
+  - `→ Loading config`
+  - `✓ Config loaded from <path>`
+- Updated preview log flow to print generated files first, then fixture warnings as indented details.
+- Removed internal conditional logic tied to `verbose` to simplify future maintenance.
+
+### Deprecated
+
+- `-v, --verbose` remains as a backward-compatible legacy alias (no-op).
+- Plan: remove the alias in the next major release.
+
+### Quality
+
+- `@promptise/cli` coverage updated to 100% (statements/branches/functions/lines).
+
 ## [2.0.0] - 2026-02-13
 
 ### Changed
 
 - **Breaking:** fixture status `full` -> `complete`.
-- **Breaking:** `Estimated Tokens` se muestra solo en fixtures `complete`.
-- **Breaking:** `Estimated Input Cost` se muestra solo en fixtures `complete`.
-- Dependencia de core alineada a `@promptise/core@^2.0.0`.
+- **Breaking:** `Estimated Tokens` is shown only for `complete` fixtures.
+- **Breaking:** `Estimated Input Cost` is shown only for `complete` fixtures.
+- Core dependency aligned to `@promptise/core@^2.0.0`.
 
 ### Added
 
-- Limpieza de previews stale por defecto antes de build.
-- Nuevo opt-out: `--no-clean`.
+- Stale preview cleanup enabled by default before build.
+- New opt-out flag: `--no-clean`.
 
 ### Documentation
 
-- README y docs de learn alineados al comportamiento actual de previews y metadata.
+- README and learn docs aligned with current preview and metadata behavior.
 
 ## [1.0.0] - 2026-02-10
 
