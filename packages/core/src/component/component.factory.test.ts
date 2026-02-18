@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { createPromptComponent } from './component.factory';
 
 // Mock TOON library
-jest.mock('@toon-format/toon', () => ({
+vi.mock('@toon-format/toon', () => ({
   encode: (value: unknown) => {
     if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
       const keys = Object.keys(value[0] as Record<string, unknown>);
@@ -881,7 +881,7 @@ ${input.items.map((item) => `- ${item}`).join('\n')}`;
     });
 
     it('should warn for optional keywords', () => {
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
       const component = createPromptComponent({
         key: 'optional-keywords',

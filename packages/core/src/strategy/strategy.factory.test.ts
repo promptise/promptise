@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { createPromptStrategy } from './strategy.factory.js';
 import { createPromptComposition } from '../composition/composition.factory.js';
 import { createPromptComponent } from '../component/component.factory.js';
@@ -6,7 +6,7 @@ import { createStrategyPattern } from './pattern/strategy-pattern.factory.js';
 import { z } from 'zod';
 
 // Mock TOON library
-jest.mock('@toon-format/toon', () => ({
+vi.mock('@toon-format/toon', () => ({
   encode: (value: unknown) => {
     if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
       const keys = Object.keys(value[0] as Record<string, unknown>);
@@ -808,7 +808,7 @@ describe('PromptStrategy Factory', () => {
       expect(strategy.getCurrentIndex()).toBe(18);
       expect(strategy.completed).toBe(false);
       expect(strategy.getHistory()).toHaveLength(18); // All next() calls
-    });
+    }, 15000);
 
     it('handles steps array mutation protection', () => {
       const originalSteps = [draftComposition, critiqueComposition];

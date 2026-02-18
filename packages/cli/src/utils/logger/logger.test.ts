@@ -1,12 +1,13 @@
 import { logger } from './logger';
+import type { MockInstance } from 'vitest';
 
 describe('logger', () => {
-  let consoleLogSpy: jest.SpyInstance;
-  let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: MockInstance;
+  let consoleErrorSpy: MockInstance;
 
   beforeEach(() => {
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
   afterEach(() => {

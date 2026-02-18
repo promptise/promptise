@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "test": "jest",
+    "test": "vitest run --config vitest.config.ts",
     "clean": "rm -rf dist",
     "lint": "prettier --write . --cache --ignore-path ../../.prettierignore --log-level error && eslint . --fix",
     "lint:ci": "prettier --check . --cache --ignore-path ../../.prettierignore --log-level error && eslint .",

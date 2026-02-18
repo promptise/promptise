@@ -6,7 +6,7 @@
 import * as Promptise from './index';
 
 // Mock TOON library
-jest.mock('@toon-format/toon', () => ({
+vi.mock('@toon-format/toon', () => ({
   encode: (value: unknown) => {
     if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
       const keys = Object.keys(value[0] as Record<string, unknown>);

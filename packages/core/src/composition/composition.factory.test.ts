@@ -4,7 +4,7 @@ import { createPromptComposition } from './composition.factory';
 import { createCompositionPattern } from './pattern/composition-pattern.factory';
 
 // Mock TOON library
-jest.mock('@toon-format/toon', () => ({
+vi.mock('@toon-format/toon', () => ({
   encode: (value: unknown) => {
     if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
       const keys = Object.keys(value[0] as Record<string, unknown>);
@@ -485,7 +485,7 @@ describe('createPromptComposition', () => {
   });
 
   it('should warn on schema key collision', () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     const comp1 = createPromptComponent({
       key: 'comp1',
@@ -512,7 +512,7 @@ describe('createPromptComposition', () => {
   });
 
   it('should not warn when there are no schema key collisions', () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     const comp1 = createPromptComponent({
       key: 'comp1',
@@ -699,7 +699,7 @@ describe('createPromptComposition', () => {
   });
 
   it('should warn for strategy validation warnings', () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     const warningStrategy = createCompositionPattern({
       id: 'WarningStrategy',

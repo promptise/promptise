@@ -29,7 +29,7 @@ docs/
 ```bash
 npm run validate  # lint + test + build
 npm run lint      # ESLint
-npm run test      # Jest
+npm run test      # Vitest
 npm run build     # TypeScript compilation
 ```
 
