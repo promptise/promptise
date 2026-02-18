@@ -45,6 +45,46 @@ describe('logger', () => {
     });
   });
 
+  describe('separator', () => {
+    it('should log separator line', () => {
+      logger.separator();
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      const loggedMessage = consoleLogSpy.mock.calls[0][0];
+      expect(loggedMessage).toContain('═══');
+    });
+  });
+
+  describe('step', () => {
+    it('should log step message with arrow prefix', () => {
+      logger.step('Generating previews');
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      const loggedMessage = consoleLogSpy.mock.calls[0][0];
+      expect(loggedMessage).toContain('Generating previews');
+      expect(loggedMessage).toContain('→');
+    });
+  });
+
+  describe('detail', () => {
+    it('should log indented detail message', () => {
+      logger.detail('Output: .promptise/builds');
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      const loggedMessage = consoleLogSpy.mock.calls[0][0];
+      expect(loggedMessage).toContain('Output: .promptise/builds');
+    });
+  });
+
+  describe('blank', () => {
+    it('should log a blank line', () => {
+      logger.blank();
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('');
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('success', () => {
     it('should log success message in green', () => {
       logger.success('Success!');
@@ -62,6 +102,16 @@ describe('logger', () => {
       expect(consoleLogSpy).toHaveBeenCalledTimes(1);
       const loggedMessage = consoleLogSpy.mock.calls[0][0];
       expect(loggedMessage).toContain('Warning!');
+    });
+  });
+
+  describe('warnDetail', () => {
+    it('should log indented warning detail message in yellow', () => {
+      logger.warnDetail('partial fixture (missing: rules)');
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      const loggedMessage = consoleLogSpy.mock.calls[0][0];
+      expect(loggedMessage).toContain('⚠ partial fixture (missing: rules)');
     });
   });
 

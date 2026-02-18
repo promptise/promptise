@@ -1,0 +1,10 @@
+---
+Composition ID: fragile-prompt
+Fixture: empty (empty - 0/1)
+Schema Fields:
+  ✗ sensitive (required) → placeholder
+---
+[Promptise] Preview generated with placeholder fallback.
+Reason: sensitive input cannot contain unresolved placeholders
+Placeholders:
+- sensitive: "{{sensitive}}"

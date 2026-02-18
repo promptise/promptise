@@ -81,30 +81,25 @@ describe('buildCommand', () => {
     });
   });
 
-  describe('verbose mode', () => {
-    it('should log config loading in verbose mode', async () => {
-      await buildCommand(undefined, { outdir: '.promptise/builds', verbose: true });
+  describe('logging', () => {
+    it('should log config loading by default', async () => {
+      await buildCommand(undefined, { outdir: '.promptise/builds' });
 
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Loading config from'));
-      expect(mockLogger.success).toHaveBeenCalledWith(expect.stringContaining('Config loaded'));
+      expect(mockLogger.step).toHaveBeenCalledWith('Loading config');
+      expect(mockLogger.success).toHaveBeenCalledWith(
+        expect.stringContaining('Config loaded from promptise.config.ts'),
+      );
     });
 
-    it('should show custom config path in verbose mode', async () => {
+    it('should show custom config path in success message', async () => {
       await buildCommand(undefined, {
         outdir: '.promptise/builds',
-        verbose: true,
         config: 'custom.config.ts',
       });
 
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('custom.config.ts'));
-    });
-
-    it('should not log extra messages when verbose=false', async () => {
-      await buildCommand(undefined, { outdir: '.promptise/builds', verbose: false });
-
-      expect(mockLogger.banner).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Building previews'));
-      expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Loading config'));
+      expect(mockLogger.success).toHaveBeenCalledWith(
+        expect.stringContaining('Config loaded from custom.config.ts'),
+      );
     });
   });
 
@@ -130,6 +125,32 @@ describe('buildCommand', () => {
 
     it('should include output directory in success message', async () => {
       await buildCommand(undefined, { outdir: './custom/path' });
+
+      expect(mockLogger.success).toHaveBeenCalledWith(expect.stringContaining('custom/path'));
+    });
+
+    it('should display dot when output path resolves to init cwd', async () => {
+      const originalInitCwd = process.env.INIT_CWD;
+      process.env.INIT_CWD = process.cwd();
+
+      try {
+        await buildCommand(undefined, { outdir: '.' });
+      } finally {
+        process.env.INIT_CWD = originalInitCwd;
+      }
+
+      expect(mockLogger.success).toHaveBeenCalledWith(expect.stringContaining(' in .'));
+    });
+
+    it('should fallback to process cwd when INIT_CWD is undefined', async () => {
+      const originalInitCwd = process.env.INIT_CWD;
+      delete process.env.INIT_CWD;
+
+      try {
+        await buildCommand(undefined, { outdir: './custom/path' });
+      } finally {
+        process.env.INIT_CWD = originalInitCwd;
+      }
 
       expect(mockLogger.success).toHaveBeenCalledWith(expect.stringContaining('custom/path'));
     });
@@ -173,7 +194,7 @@ describe('buildCommand', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('No previews generated'),
       );
-      expect(mockLogger.success).not.toHaveBeenCalled();
+      expect(mockLogger.success).not.toHaveBeenCalledWith(expect.stringContaining('Generated'));
     });
   });
 
@@ -218,7 +239,6 @@ describe('buildCommand', () => {
       await buildCommand('comp-id', {
         outdir: './output',
         fixture: 'fixture-name',
-        verbose: true,
         metadata: false,
         clean: false,
         config: 'custom.config.ts',
@@ -227,7 +247,6 @@ describe('buildCommand', () => {
       expect(mockGeneratePreviews).toHaveBeenCalledWith(mockRegistry, {
         outdir: './output',
         fixture: 'fixture-name',
-        verbose: true,
         metadata: false,
         clean: false,
         config: 'custom.config.ts',

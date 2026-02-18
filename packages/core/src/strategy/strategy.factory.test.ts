@@ -1032,6 +1032,51 @@ describe('PromptStrategy Factory', () => {
       expect(afterNext.percentage).toBe(100);
     });
 
+    it('returns null from current() and next() when the first step is sparse', () => {
+      const sparseSteps = [draftComposition, critiqueComposition];
+
+      const strategy = createPromptStrategy({
+        id: 'sparse-first-step',
+        steps: sparseSteps,
+      });
+      sparseSteps[0] = undefined as unknown as (typeof sparseSteps)[number];
+
+      expect(strategy.current({ topic: 'AI' })).toBeNull();
+      expect(strategy.next({ topic: 'AI' })).toBeNull();
+      expect(strategy.getHistory()).toHaveLength(0);
+    });
+
+    it('handles sparse next steps in getNextStep(), next(), and getStep()', () => {
+      const sparseSteps = [draftComposition, critiqueComposition];
+
+      const strategy = createPromptStrategy({
+        id: 'sparse-next-step',
+        steps: sparseSteps,
+      });
+      sparseSteps[1] = undefined as unknown as (typeof sparseSteps)[number];
+
+      expect(strategy.getNextStep()).toBeNull();
+      expect(strategy.next({ topic: 'AI' })).toBeNull();
+      expect(strategy.getHistory()).toHaveLength(1);
+      expect(strategy.getHistory()[0].id).toBe('draft');
+      expect(() => strategy.getStep(1)).toThrow(/step not found at index 1/);
+    });
+
+    it('returns 0 progress when steps array is externally emptied', () => {
+      const mutableSteps = [draftComposition];
+      const strategy = createPromptStrategy({
+        id: 'empty-steps-progress',
+        steps: mutableSteps,
+      });
+
+      mutableSteps.length = 0;
+
+      const progress = strategy.progress;
+      expect(progress.current).toBe(0);
+      expect(progress.total).toBe(0);
+      expect(progress.percentage).toBe(0);
+    });
+
     it("current() is idempotent - multiple calls don't change state", () => {
       const strategy = createPromptStrategy({
         id: 'idempotent-test',

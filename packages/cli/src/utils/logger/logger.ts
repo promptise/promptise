@@ -4,13 +4,13 @@
 
 import chalk from 'chalk';
 
+const SEPARATOR = '═══════════════════════════════════════════════════';
+
 const BANNER = `
-═══════════════════════════════════════════════════
+${SEPARATOR}
 
   █▀█ █▀█ █▀█ █▀▄▀█ █▀█ ▀█▀ █ █▀ █▀▀   █▀▀ █   █
   █▀▀ █▀▄ █▄█ █ ▀ █ █▀▀  █  █ ▄█ ██▄   █▄▄ █▄▄ █
-
-═══════════════════════════════════════════════════
 `;
 
 /**
@@ -32,6 +32,34 @@ export const logger = {
   },
 
   /**
+   * Log cyan separator line.
+   */
+  separator(): void {
+    console.log(chalk.bold.cyan(SEPARATOR));
+  },
+
+  /**
+   * Log step message with cyan arrow prefix.
+   */
+  step(message: string): void {
+    console.log(chalk.bold.cyan(`→ ${message}`));
+  },
+
+  /**
+   * Log indented detail message.
+   */
+  detail(message: string): void {
+    console.log(chalk.gray(`  ${message}`));
+  },
+
+  /**
+   * Log a blank line.
+   */
+  blank(): void {
+    console.log('');
+  },
+
+  /**
    * Log info message.
    */
   info(message: string): void {
@@ -42,21 +70,28 @@ export const logger = {
    * Log success message (green).
    */
   success(message: string): void {
-    console.log(chalk.green(message));
+    console.log(chalk.green(`✓ ${message}`));
   },
 
   /**
    * Log warning message (yellow).
    */
   warn(message: string): void {
-    console.log(chalk.yellow(message));
+    console.log(chalk.yellow(`⚠ ${message}`));
+  },
+
+  /**
+   * Log indented warning message (yellow).
+   */
+  warnDetail(message: string): void {
+    console.log(chalk.yellow(`     ⚠ ${message}`));
   },
 
   /**
    * Log error message (red).
    */
   error(message: string, error?: unknown): void {
-    console.error(chalk.red(message));
+    console.error(chalk.red(`✖ ${message}`));
     if (error instanceof Error) {
       console.error(chalk.red(error.message));
       if (error.stack) {

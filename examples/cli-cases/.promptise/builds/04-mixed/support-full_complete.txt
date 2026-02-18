@@ -1,0 +1,30 @@
+---
+Composition ID: support-full
+Fixture: complete (complete - 4/4)
+Schema Fields:
+  ✓ role (required)
+  ✓ context (required)
+  ✓ task (required)
+  ✓ rules (required)
+
+Estimated Input Cost:
+  Input Pricing: $5.00 / 1M tokens ($0.000005/token)
+  Static: 35 tokens / $0.000175
+  Dynamic: 34 tokens / $0.000170
+  Total: 69 tokens / $0.000345
+---
+<role>
+You are a support lead.
+</role>
+<context>
+Context: Production rollout caused timeout spikes
+</context>
+<task>
+Task: Create incident response checklist
+</task>
+<rules>
+Rules:
+- Acknowledge severity and impact
+- Prioritize safe rollback options
+- List follow-up actions with owners
+</rules>

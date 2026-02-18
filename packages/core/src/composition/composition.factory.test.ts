@@ -511,6 +511,45 @@ describe('createPromptComposition', () => {
     consoleWarnSpy.mockRestore();
   });
 
+  it('should fallback to "unknown" when previous collision source is unavailable', () => {
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const originalMapGet = Map.prototype.get;
+    const mapGetSpy = vi.spyOn(Map.prototype, 'get').mockImplementation(function (
+      this: Map<unknown, unknown>,
+      key: unknown,
+    ) {
+      if (key === 'sharedCollisionKey') {
+        return undefined;
+      }
+      const value = originalMapGet.call(this, key) as unknown;
+      return value;
+    });
+
+    const comp1 = createPromptComponent({
+      key: 'comp1',
+      schema: z.object({ sharedCollisionKey: z.string() }),
+      template: 'First {{sharedCollisionKey}}',
+    });
+
+    const comp2 = createPromptComponent({
+      key: 'comp2',
+      schema: z.object({ sharedCollisionKey: z.string() }),
+      template: 'Second {{sharedCollisionKey}}',
+    });
+
+    createPromptComposition({
+      id: 'collision-unknown-fallback',
+      components: [comp1, comp2],
+    });
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('first in "unknown", now in "comp2"'),
+    );
+
+    mapGetSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+  });
+
   it('should not warn when there are no schema key collisions', () => {
     const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 

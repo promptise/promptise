@@ -1,0 +1,28 @@
+{
+  "name": "promptise-example-cli-cases",
+  "version": "1.0.0",
+  "description": "CLI logging scenarios for Promptise",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsx ../../packages/cli/src/index.ts build --config ./cases/04-mixed/promptise.config.ts --outdir .promptise/builds/04-mixed",
+    "build:verbose": "tsx ../../packages/cli/src/index.ts build --config ./cases/04-mixed/promptise.config.ts --outdir .promptise/builds/04-mixed",
+    "case:complete": "tsx ../../packages/cli/src/index.ts build --config ./cases/01-complete/promptise.config.ts --outdir .promptise/builds/01-complete",
+    "case:partial": "tsx ../../packages/cli/src/index.ts build --config ./cases/02-partial/promptise.config.ts --outdir .promptise/builds/02-partial",
+    "case:placeholder": "tsx ../../packages/cli/src/index.ts build --config ./cases/03-placeholder/promptise.config.ts --outdir .promptise/builds/03-placeholder",
+    "case:mixed": "tsx ../../packages/cli/src/index.ts build --config ./cases/04-mixed/promptise.config.ts --outdir .promptise/builds/04-mixed",
+    "case:fallback": "tsx ../../packages/cli/src/index.ts build --config ./cases/05-fallback/promptise.config.ts --outdir .promptise/builds/05-fallback",
+    "case:no-results:composition": "tsx ../../packages/cli/src/index.ts build composition-not-found --config ./cases/06-no-results-composition/promptise.config.ts --outdir .promptise/builds/06-no-results-composition",
+    "case:no-results:fixture": "tsx ../../packages/cli/src/index.ts build --fixture fixture-not-found --config ./cases/07-no-results-fixture/promptise.config.ts --outdir .promptise/builds/07-no-results-fixture",
+    "case:config-error": "tsx ../../packages/cli/src/index.ts build --config ./cases/08-invalid-config/promptise.config.ts --outdir .promptise/builds/08-invalid-config",
+    "cases:all": "npm run case:complete && npm run case:partial && npm run case:placeholder && npm run case:mixed && npm run case:fallback && npm run case:no-results:composition && npm run case:no-results:fixture"
+  },
+  "dependencies": {
+    "@promptise/core": "*",
+    "@promptise/cli": "*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

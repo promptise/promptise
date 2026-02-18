@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import * as toon from '@toon-format/toon';
 import { createPromptComponent } from './component.factory';
 
 // Mock TOON library
@@ -492,6 +493,30 @@ Age optimized: ${ageOpt ? 'yes' : 'no'}
 
       expect(result.content).toContain('Hello Admin');
       expect(result.content).toContain('[1]{id,name}');
+    });
+
+    it('should fallback to empty string when optimized value is nullish', () => {
+      const encodeSpy = vi
+        .spyOn(toon, 'encode')
+        .mockReturnValueOnce(undefined as unknown as string);
+      const component = createPromptComponent({
+        key: 'nullish-optimized',
+        schema: z.object({
+          settings: z.object({
+            theme: z.string(),
+          }),
+        }),
+        optimizer: { toon: true },
+        template: 'Settings: {{optimized.settings}}',
+      });
+
+      const result = component.render({
+        settings: { theme: 'dark' },
+      });
+
+      expect(result.content).toBe('Settings: ');
+      expect(result.content).not.toContain('undefined');
+      encodeSpy.mockRestore();
     });
   });
 
