@@ -1,13 +1,14 @@
 import { existsSync } from 'node:fs';
 import { loadConfig } from './config-loader';
+import type { MockedFunction } from 'vitest';
 
-jest.mock('node:fs');
+vi.mock('node:fs');
 
-const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
+const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
 
 describe('loadConfig', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should throw error when config file does not exist', async () => {
@@ -31,7 +32,7 @@ describe('loadConfig', () => {
     await expect(loadConfig()).rejects.toThrow('--config');
   });
 
-  // Note: Dynamic import edge cases are difficult to test in Jest
+  // Note: Dynamic import edge cases are difficult to test in unit tests
   // These scenarios are covered by E2E/integration tests:
 
   describe('edge cases - documented behavior', () => {
@@ -62,6 +63,6 @@ describe('loadConfig', () => {
     });
   });
 
-  // Note: We can't easily test the import logic in Jest without real files
+  // Note: We can't easily test the import logic in unit tests without real files
   // The actual import behavior is covered by integration tests
 });

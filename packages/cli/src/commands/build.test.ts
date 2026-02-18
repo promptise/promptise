@@ -3,32 +3,32 @@ import { loadConfig } from '../utils/config-loader/index.js';
 import { generatePreviews } from '../utils/preview-generator/index.js';
 import { logger } from '../utils/logger/index.js';
 import type { Promptise } from '@promptise/core';
+import type { Mocked, MockedFunction, MockInstance } from 'vitest';
 
-jest.mock('../utils/config-loader/index.js');
-jest.mock('../utils/preview-generator/index.js');
-jest.mock('../utils/logger/index.js');
+vi.mock('../utils/config-loader/index.js');
+vi.mock('../utils/preview-generator/index.js');
+vi.mock('../utils/logger/index.js');
 
-const mockLoadConfig = loadConfig as jest.MockedFunction<typeof loadConfig>;
-const mockGeneratePreviews = generatePreviews as jest.MockedFunction<typeof generatePreviews>;
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockLoadConfig = loadConfig as MockedFunction<typeof loadConfig>;
+const mockGeneratePreviews = generatePreviews as MockedFunction<typeof generatePreviews>;
+const mockLogger = logger as Mocked<typeof logger>;
 
 describe('buildCommand', () => {
   let mockRegistry: Promptise;
-  let processExitSpy: jest.SpyInstance;
+  let processExitSpy: MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockRegistry = {
-      getCompositions: jest.fn().mockReturnValue([]),
-      getCompositions: jest.fn().mockReturnValue([]),
+      getCompositions: vi.fn().mockReturnValue([]),
     } as unknown as Promptise;
 
     mockLoadConfig.mockResolvedValue(mockRegistry);
     mockGeneratePreviews.mockResolvedValue({ totalBuilds: 5, totalWarnings: 0 });
 
     // Mock process.exit
-    processExitSpy = jest.spyOn(process, 'exit').mockImplementation((code?: number) => {
+    processExitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: number) => {
       throw new Error(`process.exit: ${code}`);
     });
   });

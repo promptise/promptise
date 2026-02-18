@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Developer Tooling
 
-- Jest test suite with 96 tests
+- Unit test suite with 96 tests
 - 91.17% code coverage
 - ESLint strict type checking
 - Prettier code formatting

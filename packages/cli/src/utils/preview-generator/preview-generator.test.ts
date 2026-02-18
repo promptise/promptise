@@ -2,15 +2,16 @@ import { mkdir, readdir, unlink, writeFile } from 'node:fs/promises';
 import { generatePreviews } from './preview-generator';
 import { logger } from '../logger/index.js';
 import { z } from 'zod';
+import type { Mocked, MockedFunction } from 'vitest';
 
-jest.mock('node:fs/promises');
-jest.mock('../logger/index.js');
+vi.mock('node:fs/promises');
+vi.mock('../logger/index.js');
 
-const mockMkdir = mkdir as jest.MockedFunction<typeof mkdir>;
-const mockReaddir = readdir as jest.MockedFunction<typeof readdir>;
-const mockUnlink = unlink as jest.MockedFunction<typeof unlink>;
-const mockWriteFile = writeFile as jest.MockedFunction<typeof writeFile>;
-const mockLogger = logger as jest.Mocked<typeof logger>;
+const mockMkdir = mkdir as MockedFunction<typeof mkdir>;
+const mockReaddir = readdir as MockedFunction<typeof readdir>;
+const mockUnlink = unlink as MockedFunction<typeof unlink>;
+const mockWriteFile = writeFile as MockedFunction<typeof writeFile>;
+const mockLogger = logger as Mocked<typeof logger>;
 
 function createFileDirent(name: string): { name: string; isFile: () => boolean } {
   return {
@@ -23,13 +24,13 @@ describe('generatePreviews', () => {
   let mockRegistry: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockReaddir.mockResolvedValue([]);
     mockUnlink.mockResolvedValue(undefined);
 
     // Create mock registry with basic structure
     mockRegistry = {
-      getCompositions: jest.fn(() => [
+      getCompositions: vi.fn(() => [
         {
           composition: {
             id: 'test-comp',
@@ -37,7 +38,7 @@ describe('generatePreviews', () => {
               field1: z.string(),
               field2: z.string(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
               metadata: { estimatedTokens: 10 },
             })),
@@ -150,7 +151,7 @@ describe('generatePreviews', () => {
               required: z.string(),
               optional: z.string().optional(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Required: ${data.required}`,
               metadata: { estimatedTokens: 5 },
             })),
@@ -192,7 +193,7 @@ describe('generatePreviews', () => {
               field1: z.string(),
               field2: z.string(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
               metadata: { estimatedTokens: data.field1 === '' && data.field2 === '' ? 4 : 10 },
             })),
@@ -228,7 +229,7 @@ describe('generatePreviews', () => {
               field1: z.string(),
               field2: z.string(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
               metadata: { estimatedTokens: 8 },
             })),
@@ -268,7 +269,7 @@ describe('generatePreviews', () => {
               name: z.string(),
               description: z.string().optional(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Name: ${data.name}, Desc: ${data.description}`,
               metadata: { estimatedTokens: 8 },
             })),
@@ -294,7 +295,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'no-schema',
             schema: z.object({}), // Empty schema - no fields
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => 'Static content',
               metadata: { estimatedTokens: 2 },
             })),
@@ -363,7 +364,7 @@ describe('generatePreviews', () => {
               field1: z.string(),
               field2: z.string(),
             }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => `Field1: {{field1}}, Field2: {{field2}}`,
               metadata: { estimatedTokens: 5 },
             })),
@@ -393,7 +394,7 @@ describe('generatePreviews', () => {
             schema: z.object({
               name: z.string(),
             }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => `Name: {{name}}`,
               metadata: { estimatedTokens: 3 },
             })),
@@ -431,7 +432,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'failing',
             schema: z.object({ required: z.string() }),
-            build: jest.fn(() => {
+            build: vi.fn(() => {
               throw new Error('Build failed');
             }),
           },
@@ -478,7 +479,7 @@ describe('generatePreviews', () => {
               field1: z.string(),
               field2: z.string().nullable(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Field1: ${data.field1}, Field2: ${data.field2}`,
               metadata: { estimatedTokens: 10 },
             })),
@@ -504,7 +505,7 @@ describe('generatePreviews', () => {
               field1: z.string(),
               field2: z.string().optional(),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Field1: ${data.field1}`,
               metadata: { estimatedTokens: 5 },
             })),
@@ -534,7 +535,7 @@ describe('generatePreviews', () => {
                 inner: z.string(),
               }),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Simple: ${data.simple}, Inner: ${data.nested.inner}`,
               metadata: { estimatedTokens: 12 },
             })),
@@ -565,7 +566,7 @@ describe('generatePreviews', () => {
               name: z.string(),
               tags: z.array(z.string()),
             }),
-            build: jest.fn((data) => ({
+            build: vi.fn((data) => ({
               asString: () => `Name: ${data.name}, Tags: ${data.tags.join(', ')}`,
               metadata: { estimatedTokens: 15 },
             })),
@@ -595,7 +596,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'zero-tokens',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => '',
               metadata: { estimatedTokens: 0 },
             })),
@@ -619,7 +620,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'large-tokens',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => 'a'.repeat(50000),
               metadata: { estimatedTokens: 15000 },
             })),
@@ -643,7 +644,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'empty-render',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => '',
               metadata: { estimatedTokens: 0 },
             })),
@@ -672,7 +673,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'comp-with-special@chars!',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => 'test content',
               metadata: { estimatedTokens: 5 },
             })),
@@ -700,7 +701,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'normal-comp',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => 'test content',
               metadata: { estimatedTokens: 5 },
             })),
@@ -727,7 +728,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'comp-1',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => 'content 1',
               metadata: { estimatedTokens: 5 },
             })),
@@ -740,7 +741,7 @@ describe('generatePreviews', () => {
           composition: {
             id: 'comp-2',
             schema: z.object({ field: z.string() }),
-            build: jest.fn(() => ({
+            build: vi.fn(() => ({
               asString: () => 'content 2',
               metadata: { estimatedTokens: 5 },
             })),
