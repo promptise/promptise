@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking:** fixture status `full` -> `complete`.
 - **Breaking:** `Estimated Tokens` se muestra solo en fixtures `complete`.
 - **Breaking:** `Estimated Input Cost` se muestra solo en fixtures `complete`.
-- Mensaje placeholder actualizado: `No fields provided`.
 - Dependencia de core alineada a `@promptise/core@^2.0.0`.
 
 ### Added

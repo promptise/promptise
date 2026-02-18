@@ -87,4 +87,22 @@ describe('extractPlaceholders', () => {
     // Spaces break the \w+ pattern, only extracts valid ones
     expect(result).toEqual(['valid']);
   });
+
+  it('should fallback to empty string when capture group is missing', () => {
+    const originalMatchAll = String.prototype.matchAll;
+
+    String.prototype.matchAll = vi.fn(
+      () =>
+        [['{{broken}}', undefined] as unknown as RegExpMatchArray][
+          Symbol.iterator
+        ]() as IterableIterator<RegExpMatchArray>,
+    );
+
+    try {
+      const result = extractPlaceholders('ignored');
+      expect(result).toEqual(['']);
+    } finally {
+      String.prototype.matchAll = originalMatchAll;
+    }
+  });
 });

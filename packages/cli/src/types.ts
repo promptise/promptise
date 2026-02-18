@@ -36,7 +36,8 @@ export interface BuildOptions {
   clean?: boolean;
 
   /**
-   * Enable verbose logging.
+   * Legacy alias accepted by CLI parser.
+   * @deprecated Verbose logging is always enabled by default.
    */
   verbose?: boolean;
 }

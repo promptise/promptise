@@ -1,68 +1,106 @@
-import { existsSync } from 'node:fs';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { loadConfig } from './config-loader';
-import type { MockedFunction } from 'vitest';
 
-vi.mock('node:fs');
-
-const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
+async function createTempConfig(contents: string): Promise<{ dir: string; file: string }> {
+  const dir = await mkdtemp(join(tmpdir(), 'promptise-cli-config-'));
+  const file = join(dir, 'promptise.config.mjs');
+  await writeFile(file, contents, 'utf-8');
+  return { dir, file };
+}
 
 describe('loadConfig', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it('should throw error when config file does not exist', async () => {
-    mockExistsSync.mockReturnValue(false);
+    const missingPath = join(tmpdir(), `promptise-missing-${Date.now()}.mjs`);
 
-    await expect(loadConfig()).rejects.toThrow('Config file not found');
-    await expect(loadConfig()).rejects.toThrow('promptise.config.ts');
+    await expect(loadConfig(missingPath)).rejects.toThrow('Config file not found');
+    await expect(loadConfig(missingPath)).rejects.toThrow('Create a promptise.config.ts');
   });
 
-  it('should throw error when config file does not exist at custom path', async () => {
-    mockExistsSync.mockReturnValue(false);
+  it('should load config when module exports default with getCompositions', async () => {
+    const { dir, file } = await createTempConfig(
+      'export default { getCompositions() { return []; } };',
+    );
 
-    await expect(loadConfig('custom/path.ts')).rejects.toThrow('Config file not found');
-    await expect(loadConfig('custom/path.ts')).rejects.toThrow('custom/path.ts');
+    try {
+      const config = await loadConfig(file);
+      expect(typeof config.getCompositions).toBe('function');
+      expect(config.getCompositions()).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
-  it('should include usage hint in error message', async () => {
-    mockExistsSync.mockReturnValue(false);
+  it('should load default promptise.config.ts path when configPath is omitted', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'promptise-cli-default-config-'));
+    const file = join(dir, 'promptise.config.ts');
+    const originalCwd = process.cwd();
 
-    await expect(loadConfig()).rejects.toThrow('Create a promptise.config.ts');
-    await expect(loadConfig()).rejects.toThrow('--config');
+    await writeFile(file, 'export default { getCompositions() { return []; } };', 'utf-8');
+
+    try {
+      process.chdir(dir);
+      const config = await loadConfig();
+      expect(typeof config.getCompositions).toBe('function');
+    } finally {
+      process.chdir(originalCwd);
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
-  // Note: Dynamic import edge cases are difficult to test in unit tests
-  // These scenarios are covered by E2E/integration tests:
+  it('should wrap error when default export is missing', async () => {
+    const { dir, file } = await createTempConfig('export const value = 1;');
 
-  describe('edge cases - documented behavior', () => {
-    it('should document syntax error behavior', () => {
-      // When config has syntax errors (e.g., malformed TypeScript),
-      // dynamic import() will throw SyntaxError or module parse error.
-      // The catch block wraps it in generic "Failed to load config" error.
-      // This is tested via E2E tests with actual malformed files.
-      expect(true).toBe(true); // Documentation test
-    });
-
-    it('should document runtime error behavior', () => {
-      // When config throws error during import (e.g., in module initialization),
-      // the error is caught and re-thrown with "Failed to load config" wrapper.
-      // Example: import that fails, constructor that throws, etc.
-      // This is tested via E2E tests with actual error-throwing configs.
-      expect(true).toBe(true); // Documentation test
-    });
-
-    it('should document relative path behavior', () => {
-      // loadConfig uses resolve(process.cwd(), configPath)
-      // Supports:
-      // - Relative: './config.ts', '../parent/config.ts'
-      // - Absolute: '/absolute/path/config.ts'
-      // - Simple: 'config.ts' (resolved from cwd)
-      // All paths are converted to file:// URLs for dynamic import.
-      expect(true).toBe(true); // Documentation test
-    });
+    try {
+      await expect(loadConfig(file)).rejects.toThrow('Failed to load config file');
+      await expect(loadConfig(file)).rejects.toThrow('Default export must have a value');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
-  // Note: We can't easily test the import logic in unit tests without real files
-  // The actual import behavior is covered by integration tests
+  it('should wrap error when default export is not a Promptise instance', async () => {
+    const { dir, file } = await createTempConfig('export default { value: 1 };');
+
+    try {
+      await expect(loadConfig(file)).rejects.toThrow('Failed to load config file');
+      await expect(loadConfig(file)).rejects.toThrow('Default export must be a Promptise instance');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('should rethrow errors that already include "Config file"', async () => {
+    const { dir, file } = await createTempConfig('throw new Error("Config file exploded");');
+
+    try {
+      await expect(loadConfig(file)).rejects.toThrow('Config file exploded');
+      await expect(loadConfig(file)).rejects.not.toThrow('Failed to load config file');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('should wrap runtime module errors that are Error instances', async () => {
+    const { dir, file } = await createTempConfig('throw new Error("runtime exploded");');
+
+    try {
+      await expect(loadConfig(file)).rejects.toThrow('Failed to load config file');
+      await expect(loadConfig(file)).rejects.toThrow('Error: runtime exploded');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('should wrap runtime module errors that are not Error instances', async () => {
+    const { dir, file } = await createTempConfig("throw 'runtime-string-error';");
+
+    try {
+      await expect(loadConfig(file)).rejects.toThrow('Failed to load config file');
+      await expect(loadConfig(file)).rejects.toThrow('Error: runtime-string-error');
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
 });

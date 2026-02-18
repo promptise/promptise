@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "build": "tsx ../../packages/cli/src/index.ts build",
-    "build:verbose": "tsx ../../packages/cli/src/index.ts build --verbose",
+    "build:verbose": "tsx ../../packages/cli/src/index.ts build",
     "build:clean": "tsx ../../packages/cli/src/index.ts build --no-metadata"
   },
   "dependencies": {

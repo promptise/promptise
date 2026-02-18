@@ -1,0 +1,15 @@
+---
+Composition ID: security-review
+Fixture: partial (partial - 2/3)
+Schema Fields:
+  ✓ role (required)
+  ✓ task (required)
+  ✗ rules (required) → placeholder
+---
+## Role
+You are a security reviewer.
+## Task
+Task: Analyze token refresh endpoint logic
+## Rules
+Rules:
+- {{rules}}

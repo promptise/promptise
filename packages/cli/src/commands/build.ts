@@ -28,22 +28,25 @@ export async function buildCommand(
   compositionId?: string,
   options: BuildOptions = { outdir: '.promptise/builds' },
 ): Promise<void> {
+  const closeLogBlock = (): void => {
+    logger.blank();
+    logger.separator();
+  };
+
   try {
     logger.banner();
+    logger.blank();
 
     // Load config
-    if (options.verbose) {
-      logger.info(`Loading config from ${options.config ?? 'promptise.config.ts'}...`);
-    }
+    logger.step('Loading config');
 
     const registry = await loadConfig(options.config);
 
-    if (options.verbose) {
-      logger.success('✓ Config loaded\n');
-    }
+    logger.success(`Config loaded from ${options.config ?? 'promptise.config.ts'}`);
+    logger.blank();
 
     // Generate previews
-    logger.info('Building previews...');
+    logger.step('Generating previews');
 
     const stats = await generatePreviews(registry, {
       ...options,
@@ -52,30 +55,34 @@ export async function buildCommand(
     });
 
     // Report results
-    logger.info('');
+    logger.blank();
     if (stats.totalBuilds === 0) {
       logger.warn('No previews generated. Check your fixtures configuration.');
+      closeLogBlock();
       return;
     }
 
     // Calculate display path relative to initial working directory
     const resolvedOutdir = path.resolve(options.outdir);
     const initCwd = process.env['INIT_CWD'] ?? process.cwd();
-    const displayPath = path.relative(initCwd, resolvedOutdir);
+    const relativePath = path.relative(initCwd, resolvedOutdir);
+    const displayPath = relativePath === '' ? '.' : relativePath;
 
+    logger.title('Build Summary');
     logger.success(
-      `✓ Generated ${stats.totalBuilds} preview${stats.totalBuilds === 1 ? '' : 's'} in ${displayPath}`,
+      `Generated ${stats.totalBuilds} preview${stats.totalBuilds === 1 ? '' : 's'} in ${displayPath}`,
     );
 
     if (stats.totalWarnings > 0) {
       logger.warn(
-        `\n⚠️  ${stats.totalWarnings} file${stats.totalWarnings === 1 ? '' : 's'} with incomplete fixtures - review before using`,
+        `${stats.totalWarnings} file${stats.totalWarnings === 1 ? '' : 's'} with incomplete fixtures - review before using`,
       );
     }
 
-    logger.info('');
+    closeLogBlock();
   } catch (error) {
-    logger.error('\nBuild failed:', error);
+    logger.error('Build failed:', error);
+    closeLogBlock();
     process.exit(1);
   }
 }

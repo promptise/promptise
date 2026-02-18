@@ -15,6 +15,7 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "test": "vitest run --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage",
     "clean": "rm -rf dist",
     "lint": "prettier --write . --cache --ignore-path ../../.prettierignore --log-level error && eslint . --fix",
     "lint:ci": "prettier --check . --cache --ignore-path ../../.prettierignore --log-level error && eslint .",

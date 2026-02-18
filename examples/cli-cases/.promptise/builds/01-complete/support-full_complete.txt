@@ -1,0 +1,30 @@
+---
+Composition ID: support-full
+Fixture: complete (complete - 4/4)
+Schema Fields:
+  ✓ role (required)
+  ✓ context (required)
+  ✓ task (required)
+  ✓ rules (required)
+
+Estimated Input Cost:
+  Input Pricing: $5.00 / 1M tokens ($0.000005/token)
+  Static: 35 tokens / $0.000175
+  Dynamic: 40 tokens / $0.000200
+  Total: 75 tokens / $0.000375
+---
+<role>
+You are a customer support specialist.
+</role>
+<context>
+Context: Customer cannot reset password after MFA change
+</context>
+<task>
+Task: Provide a concise troubleshooting plan
+</task>
+<rules>
+Rules:
+- Ask for OS and browser before assumptions
+- Prioritize account recovery safety
+- End with next steps if issue persists
+</rules>

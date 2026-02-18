@@ -20,6 +20,13 @@ function createFileDirent(name: string): { name: string; isFile: () => boolean }
   };
 }
 
+function createNonFileDirent(name: string): { name: string; isFile: () => boolean } {
+  return {
+    name,
+    isFile: () => false,
+  };
+}
+
 describe('generatePreviews', () => {
   let mockRegistry: any;
 
@@ -351,7 +358,9 @@ describe('generatePreviews', () => {
     it('should warn for partial fixtures', async () => {
       const stats = await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Partial fixture'));
+      expect(mockLogger.warnDetail).toHaveBeenCalledWith(
+        expect.stringContaining('partial fixture'),
+      );
       expect(stats.totalWarnings).toBeGreaterThan(0);
     });
 
@@ -445,7 +454,7 @@ describe('generatePreviews', () => {
       const stats = await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Using fallback preview'),
+        expect.stringContaining('using fallback preview'),
       );
       expect(stats.totalBuilds).toBe(1);
       expect(mockWriteFile).toHaveBeenCalledTimes(1);
@@ -455,17 +464,22 @@ describe('generatePreviews', () => {
     });
   });
 
-  describe('verbose mode', () => {
-    it('should log success messages in verbose mode', async () => {
-      await generatePreviews(mockRegistry, { outdir: '.promptise/builds', verbose: true });
+  describe('logging', () => {
+    it('should log success messages by default', async () => {
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
 
       expect(mockLogger.success).toHaveBeenCalled();
     });
 
-    it('should not log success when verbose=false', async () => {
-      await generatePreviews(mockRegistry, { outdir: '.promptise/builds', verbose: false });
+    it('should log fixture warnings as indented details', async () => {
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
 
-      expect(mockLogger.success).not.toHaveBeenCalled();
+      expect(mockLogger.warnDetail).toHaveBeenCalledWith(
+        expect.stringContaining('partial fixture (missing: field2)'),
+      );
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('test-comp/partial'),
+      );
     });
   });
 
@@ -765,6 +779,352 @@ describe('generatePreviews', () => {
         expect.stringContaining('comp-2_common.txt'),
         expect.any(String),
         'utf-8',
+      );
+    });
+  });
+
+  describe('coverage branches', () => {
+    it('should log stale cleanup info with singular and skip non-file entries', async () => {
+      mockReaddir.mockResolvedValue([
+        createFileDirent('test-comp_stale.txt'),
+        createFileDirent('test-comp_stale.md'),
+        createNonFileDirent('test-comp_dir'),
+      ] as any);
+
+      await generatePreviews(mockRegistry, {
+        outdir: '.promptise/builds',
+      });
+
+      expect(mockUnlink).toHaveBeenCalledTimes(1);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Removed 1 stale preview'),
+      );
+    });
+
+    it('should log stale cleanup info with plural', async () => {
+      mockReaddir.mockResolvedValue([
+        createFileDirent('test-comp_old-one.txt'),
+        createFileDirent('test-comp_old-two.txt'),
+      ] as any);
+
+      await generatePreviews(mockRegistry, {
+        outdir: '.promptise/builds',
+      });
+
+      expect(mockUnlink).toHaveBeenCalledTimes(2);
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Removed 2 stale previews'),
+      );
+    });
+
+    it('should build array and object placeholders for missing complex fields', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'complex-placeholder',
+            schema: z.object({
+              trigger: z.string(),
+              tags: z.array(z.string()),
+              profile: z.object({
+                name: z.string(),
+                nickname: z.string().optional(),
+              }),
+            }),
+            build: vi.fn(() => {
+              throw new Error('force fallback');
+            }),
+          },
+          fixtures: {
+            partial: { trigger: 'ok' },
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const content = mockWriteFile.mock.calls[0]?.[1] as string;
+      expect(content).toContain('- tags: ["{{tags}}"]');
+      expect(content).toContain('- profile: {"name":"{{profile.name}}"}');
+    });
+
+    it('should use schema options and literal values for missing placeholders', async () => {
+      const buildSpy = vi.fn(() => {
+        throw new Error('force fallback');
+      });
+
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'enum-literal-partial',
+            schema: z.object({
+              trigger: z.string(),
+              mode: z.enum(['safe', 'fast']),
+              kind: z.literal('audit'),
+            }),
+            build: buildSpy,
+          },
+          fixtures: {
+            partial: { trigger: 'ok' },
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      expect(buildSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mode: 'safe',
+          kind: 'audit',
+        }),
+      );
+    });
+
+    it('should fallback to text placeholder when all candidates fail', async () => {
+      const alwaysFalseField = {
+        isOptional: () => false,
+        safeParse: () => ({ success: false }),
+      };
+      const alwaysTrueField = {
+        isOptional: () => false,
+        safeParse: () => ({ success: true }),
+      };
+      const buildSpy = vi.fn(() => {
+        throw new Error('force fallback');
+      });
+
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'fallback-placeholder',
+            schema: {
+              shape: {
+                trigger: alwaysTrueField,
+                reject: alwaysFalseField,
+              },
+            },
+            build: buildSpy,
+          },
+          fixtures: {
+            partial: { trigger: 'ok' },
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      expect(buildSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reject: '{{reject}}',
+        }),
+      );
+    });
+
+    it('should hit static value branches and recover when static build fails', async () => {
+      const stringField = {
+        isOptional: () => false,
+        safeParse: (value: unknown) => ({ success: typeof value === 'string' }),
+      };
+      const enumField = {
+        isOptional: () => false,
+        options: ['safe'],
+        safeParse: (value: unknown) => ({ success: value === 'safe' }),
+      };
+      const literalField = {
+        isOptional: () => false,
+        value: 'audit',
+        safeParse: (value: unknown) => ({ success: value === 'audit' }),
+      };
+      const objectField = {
+        isOptional: () => false,
+        shape: {
+          inner: stringField,
+          optionalInner: {
+            isOptional: () => true,
+            safeParse: () => ({ success: true }),
+          },
+        },
+        safeParse: (value: unknown) => ({
+          success:
+            typeof value === 'object' &&
+            value !== null &&
+            !Array.isArray(value) &&
+            typeof (value as Record<string, unknown>).inner === 'string',
+        }),
+      };
+      const alwaysFalseField = {
+        isOptional: () => false,
+        safeParse: () => ({ success: false }),
+      };
+
+      const buildSpy = vi.fn((data: Record<string, unknown>) => {
+        const isStaticPayload =
+          data.mode === 'safe' &&
+          data.kind === 'audit' &&
+          data.fallback === '' &&
+          typeof data.profile === 'object' &&
+          data.profile !== null &&
+          (data.profile as Record<string, unknown>).inner === '';
+
+        if (isStaticPayload) {
+          throw new Error('static build failed');
+        }
+
+        return {
+          asString: () => 'ok',
+          metadata: { estimatedTokens: 10 },
+        };
+      });
+
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'static-branches',
+            schema: {
+              shape: {
+                role: stringField,
+                mode: enumField,
+                kind: literalField,
+                profile: objectField,
+                fallback: alwaysFalseField,
+              },
+            },
+            build: buildSpy,
+          },
+          fixtures: {
+            complete: {
+              role: 'assistant',
+              mode: 'safe',
+              kind: 'audit',
+              profile: { inner: 'value' },
+              fallback: 'input',
+            },
+          },
+        },
+      ]);
+
+      const stats = await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      expect(stats.totalBuilds).toBe(1);
+      expect(buildSpy).toHaveBeenCalledTimes(2);
+      expect(mockWriteFile).toHaveBeenCalledTimes(1);
+    });
+
+    it('should log complete fixture build errors through logger.error', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'complete-error',
+            schema: z.object({
+              role: z.string(),
+            }),
+            build: vi.fn(() => {
+              throw new Error('complete failed');
+            }),
+          },
+          fixtures: {
+            main: { role: 'assistant' },
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to generate preview for complete-error/main'),
+        expect.any(Error),
+      );
+    });
+
+    it('should evaluate hasPlaceholder false branch for non-string values', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'number-placeholder',
+            schema: z.object({
+              trigger: z.string(),
+              count: z.number(),
+            }),
+            build: vi.fn(() => {
+              throw new Error('force fallback');
+            }),
+          },
+          fixtures: {
+            partial: { trigger: 'ok' },
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const content = mockWriteFile.mock.calls[0]?.[1] as string;
+      expect(content).not.toContain('- count:');
+    });
+
+    it('should handle non-Error throw values in build fallback', async () => {
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'non-error-throw',
+            schema: z.object({
+              required: z.string(),
+            }),
+            build: vi.fn(() => {
+              // eslint-disable-next-line @typescript-eslint/only-throw-error -- intentional for branch coverage
+              throw 'non-error-thrown';
+            }),
+          },
+          fixtures: {
+            partial: {},
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      const content = mockWriteFile.mock.calls[0]?.[1] as string;
+      expect(content).toContain('Reason: non-error-thrown');
+    });
+
+    it('should handle undefined child schemas inside object placeholder generation', async () => {
+      const buildSpy = vi.fn(() => {
+        throw new Error('force fallback');
+      });
+
+      mockRegistry.getCompositions.mockReturnValue([
+        {
+          composition: {
+            id: 'undefined-child-schema',
+            schema: {
+              shape: {
+                trigger: {
+                  isOptional: () => false,
+                  safeParse: () => ({ success: true }),
+                },
+                payload: {
+                  isOptional: () => false,
+                  shape: {
+                    child: undefined,
+                  },
+                  safeParse: (value: unknown) => ({
+                    success: typeof value === 'object' && value !== null && !Array.isArray(value),
+                  }),
+                },
+              },
+            },
+            build: buildSpy,
+          },
+          fixtures: {
+            partial: { trigger: 'ok' },
+          },
+        },
+      ]);
+
+      await generatePreviews(mockRegistry, { outdir: '.promptise/builds' });
+
+      expect(buildSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: { child: '{{payload.child}}' },
+        }),
       );
     });
   });

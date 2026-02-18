@@ -1,0 +1,9 @@
+---
+Composition ID: quick-prompt
+Fixture: placeholder (empty - 0/2)
+Schema Fields:
+  ✗ role (required) → placeholder
+  ✗ task (required) → placeholder
+---
+You are a {{role}}.
+Task: {{task}}

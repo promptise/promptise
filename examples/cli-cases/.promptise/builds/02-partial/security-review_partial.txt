@@ -1,0 +1,15 @@
+---
+Composition ID: security-review
+Fixture: partial (partial - 2/3)
+Schema Fields:
+  ✓ role (required)
+  ✓ task (required)
+  ✗ rules (required) → placeholder
+---
+## Role
+You are a senior application security engineer.
+## Task
+Task: Review authentication flow for bypass risks
+## Rules
+Rules:
+- {{rules}}

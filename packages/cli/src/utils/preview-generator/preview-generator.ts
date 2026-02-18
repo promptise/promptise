@@ -72,8 +72,11 @@ function buildObjectPlaceholder(
   }
 
   const nested: Record<string, unknown> = {};
-  for (const [key, childSchema] of Object.entries(schema.shape)) {
-    if (childSchema.isOptional?.()) {
+  for (const [key, childSchema] of Object.entries(schema.shape) as [
+    string,
+    ZodFieldLike | undefined,
+  ][]) {
+    if (childSchema?.isOptional?.()) {
       continue;
     }
 
@@ -123,8 +126,11 @@ function buildStaticObject(schema: ZodFieldLike | undefined, depth = 0): Record<
   }
 
   const nested: Record<string, unknown> = {};
-  for (const [key, childSchema] of Object.entries(schema.shape)) {
-    if (childSchema.isOptional?.()) {
+  for (const [key, childSchema] of Object.entries(schema.shape) as [
+    string,
+    ZodFieldLike | undefined,
+  ][]) {
+    if (childSchema?.isOptional?.()) {
       continue;
     }
 
@@ -235,7 +241,6 @@ async function cleanupStalePreviews(
   outPath: string,
   targetCompositionIds: Set<string>,
   expectedFilenames: Set<string>,
-  verbose: boolean | undefined,
 ): Promise<number> {
   if (targetCompositionIds.size === 0) {
     return 0;
@@ -262,7 +267,7 @@ async function cleanupStalePreviews(
 
   await Promise.all(staleFiles.map(async (filename) => unlink(join(outPath, filename))));
 
-  if (verbose && staleFiles.length > 0) {
+  if (staleFiles.length > 0) {
     logger.info(
       `Removed ${staleFiles.length} stale preview${staleFiles.length === 1 ? '' : 's'} before build`,
     );
@@ -297,7 +302,7 @@ export async function generatePreviews(
   registry: Promptise,
   options: BuildOptions & { compositionId?: string; fixtureName?: string },
 ): Promise<BuildStats> {
-  const { outdir, compositionId, fixtureName, verbose, metadata = true, clean = true } = options;
+  const { outdir, compositionId, fixtureName, metadata = true, clean = true } = options;
   const entries = registry.getCompositions();
 
   // Ensure output directory exists
@@ -337,7 +342,7 @@ export async function generatePreviews(
     const expectedFilenames = new Set(
       buildTargets.map((target) => `${target.composition.id}_${target.name}.txt`),
     );
-    await cleanupStalePreviews(outPath, targetCompositionIds, expectedFilenames, verbose);
+    await cleanupStalePreviews(outPath, targetCompositionIds, expectedFilenames);
   }
 
   let totalBuilds = 0;
@@ -349,14 +354,13 @@ export async function generatePreviews(
     // Analyze fixture completeness
     const analysis = analyzeFixtureStatus(composition.schema, data);
 
-    // Log warnings for incomplete fixtures
+    // Capture warning info for incomplete fixtures (logged after file generation).
+    let fixtureWarningMessage: string | undefined;
     if (analysis.status === 'partial') {
-      logger.warn(
-        `⚠️  ${composition.id}/${name}: Partial fixture - Missing: ${analysis.missing.join(', ')}`,
-      );
+      fixtureWarningMessage = `partial fixture (missing: ${analysis.missing.join(', ')})`;
       totalWarnings++;
     } else if (analysis.status === 'placeholder') {
-      logger.warn(`⚠️  ${composition.id}/${name}: Placeholder - No fields provided`);
+      fixtureWarningMessage = 'placeholder fixture (no inputs provided)';
       totalWarnings++;
     }
 
@@ -404,7 +408,7 @@ export async function generatePreviews(
         logger.error(`Failed to generate preview for ${composition.id}/${name}`, error);
       } else {
         logger.warn(
-          `⚠️  ${composition.id}/${name}: Using fallback preview due to placeholder rendering constraints`,
+          `${composition.id}/${name}: using fallback preview due to placeholder rendering constraints`,
         );
       }
     }
@@ -465,8 +469,9 @@ export async function generatePreviews(
       const filepath = join(outPath, filename);
       await writeFile(filepath, content, 'utf-8');
 
-      if (verbose) {
-        logger.success(`✓ Generated: ${filename}`);
+      logger.success(`Generated: ${filename}`);
+      if (fixtureWarningMessage) {
+        logger.warnDetail(fixtureWarningMessage);
       }
 
       totalBuilds++;
