@@ -30,7 +30,7 @@ Options:
 - `-c, --config <path>`: set config file path
 - `--no-metadata`: generate previews without header metadata
 - `--no-clean`: keep stale preview files
-- `-v, --verbose`: enable verbose logs
+- `-v, --verbose`: deprecated alias (verbose logging is now default)
 
 ## Features
 

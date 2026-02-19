@@ -33,6 +33,13 @@ const prompt = composition.build({
 - `prompt.asString()`
 - `prompt.asMessages()`
 
+## `asMessages()` Behavior
+
+- Without `messageRoles`, `asMessages()` returns one message:
+  `{ role: 'system', content: prompt.asString() }`
+- With `messageRoles`, only mapped component keys are included as messages
+- `componentWrapper` is applied to both `asString()` and `asMessages()`
+
 ## Build Options
 
 ```typescript

@@ -19,10 +19,11 @@ const roleComponent = createPromptComponent({
 ## Core Fields
 
 - `key`: unique component key
-- `schema`: Zod schema for input validation
+- `schema`: optional Zod schema (defaults to empty object)
 - `template`: string template or function
-- `description`: optional documentation
 - `optimizer`: optional optimization config
+- `validation`: optional content validation rules
+- `description`: optional documentation
 
 ## Template Forms
 
@@ -46,3 +47,4 @@ console.log(result.content);
 ```
 
 Use `render()` for component-level validation and output.
+Prefer `composition.build()` in production.

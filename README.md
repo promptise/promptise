@@ -93,7 +93,6 @@ const prompt = myPrompt.build({
 console.log(prompt.asString());
 // Output:
 // You are a helpful assistant.
-//
 // Your task: Analyze this dataset
 ```
 
@@ -170,11 +169,9 @@ console.log(prompt.asString());
 // <role>
 // You are a helpful assistant.
 // </role>
-//
 // <rules>
 // Follow medical guidelines
 // </rules>
-//
 // <task>
 // Analyze this patient data
 // </task>
@@ -190,9 +187,10 @@ console.log(`Estimated input cost: $${inputCostEstimate.toFixed(6)}`);
 // messageRoles maps component keys to chat message roles
 const messages = prompt.asMessages();
 // [
-//   { role: 'system', content: 'You are a helpful assistant.' },
-//   { role: 'user', content: 'Analyze this patient data' }
+//   { role: 'system', content: '<role>\nYou are a helpful assistant.\n</role>' },
+//   { role: 'user', content: '<task>\nAnalyze this patient data\n</task>' }
 // ]
+// Note: unmapped component keys are omitted from asMessages().
 ```
 
 **Features:**
@@ -397,7 +395,7 @@ ${optimized.users}
 **TOON Output:**
 
 ```
-users[3]{id,name,role}:
+[3]{id,name,role}:
   1,Alice,admin
   2,Bob,user
   3,Charlie,user
