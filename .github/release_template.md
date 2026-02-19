@@ -24,34 +24,35 @@ npm install [package]@[version]
 - [Doc update 1]
 - [Doc update 2]
 
-## Upgrade from [previous-version]
+## Breaking Changes
 
-**Breaking Changes:** [None | Listed below]
+[None | Listed below]
 
-If this release has breaking changes, document each one with migration steps:
+<!-- If there are no breaking changes, keep only "None" and remove the sections below. -->
 
-### Breaking Change [1]: [short title]
+### 1) [short title]
 
-- **What changed:** [Describe the incompatible behavior/API change]
+```diff
+- [old behavior/api]
++ [new behavior/api]
+```
+
 - **Impact:** [Who is affected and how]
-- **Migration guide:**
-  1. [Step 1]
-  2. [Step 2]
-  3. [Step 3]
+- **Migration:** [Short migration guidance]
 
-### Breaking Change [2]: [short title]
+### 2) [short title]
 
-- **What changed:** [Describe the incompatible behavior/API change]
+```diff
+- [old behavior/api]
++ [new behavior/api]
+```
+
 - **Impact:** [Who is affected and how]
-- **Migration guide:**
-  1. [Step 1]
-  2. [Step 2]
-  3. [Step 3]
+- **Migration:** [Short migration guidance]
 
 ## Links
 
-- [Changelog: [package]@[version]]([changelog-link])
-- [Docs (Quickstart)](https://github.com/promptise/promptise#readme)
+- [README (General)](https://github.com/promptise/promptise#readme)
 - [Docs (Learning)](https://github.com/promptise/promptise/tree/main/docs/learn)
-- [Report issues](https://github.com/promptise/promptise/issues)
-- [npm package]([npm-link])
+- [Core Changelog](https://github.com/promptise/promptise/blob/main/packages/core/CHANGELOG.md)
+- [CLI Changelog](https://github.com/promptise/promptise/blob/main/packages/cli/CHANGELOG.md)

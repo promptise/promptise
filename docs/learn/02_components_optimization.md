@@ -30,4 +30,7 @@ const usersComponent = createPromptComponent({
 
 Optimization reduces token usage for dense structured data.
 
-Use `metadata.estimatedTokens` on compositions to compare output sizes before and after optimization.
+Read optimization stats on:
+
+- `component.render(...).metadata.optimization`
+- `prompt.metadata.components[].optimization` when using compositions

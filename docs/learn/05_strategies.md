@@ -17,7 +17,6 @@ const strategy = createPromptStrategy({
 
 - `strategy.current(data, context?)`
 - `strategy.next(data, context?)`
-- `strategy.previous(data, context?)`
 - `strategy.reset()`
 - `strategy.progress`
 - `strategy.getHistory()`

@@ -15,25 +15,19 @@
 
 - Change 3
 
+<!-- Optional: add this section only if it helps explain the change.
+
 ## Diagrams
 
-<!-- Optional. Add if it helps visualize the changes:
-     - Structure changes (before/after)
-     - Flow/sequence diagrams
-     - Architecture changes
-     - API changes
-     Remove this section if not applicable.
+**Before**
+```text
+code or diagram
+```
 
-     Example format:
-     **Before**
-     ```
-     code or diagram
-     ```
-
-     **After**
-     ```
-     code or diagram
-     ```
+**After**
+```text
+code or diagram
+```
 -->
 
 ## Checklist
